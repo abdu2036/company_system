@@ -1,0 +1,26 @@
+html, body {
+direction: rtl;
+text-align: right;
+}
+
+.main-sidebar{
+right:0;
+left:auto;
+}
+
+.content-wrapper,
+.main-header,
+.main-footer{
+margin-right:250px;
+margin-left:0;
+}
+
+.nav-sidebar .nav-icon{
+margin-left:.5rem;
+margin-right:0;
+}
+
+.table th,
+.table td{
+text-align:right;
+}

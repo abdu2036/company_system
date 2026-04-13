@@ -1,0 +1,100 @@
+    <div class="col-md-3 col-sm-6">
+        <div class="small-box bg-danger shadow-sm" style="filter: brightness(90%);">
+            <div class="inner">
+                <h3>{{ $expiredRegisters }}</h3>
+                <p>سجل تجاري منتهي ⚠️</p>
+            </div>
+            <div class="icon"><i class="fas fa-id-badge"></i></div>
+        </div>
+    </div>
+
+
+
+        <div class="col-md-2 col-sm-6">
+        <div class="small-box bg-danger shadow-sm" style="filter: brightness(80%);">
+            <div class="inner">
+                <h3>{{ $expiredChamber }}</h3> {{-- أو متغير للمنتهي تماماً إذا توفر --}}
+                <p>غرفة تجارية ⚠️</p>
+            </div>
+            <div class="icon"><i class="fas fa-store-alt"></i></div>
+        </div>
+    </div>
+
+        {{-- 5. سجل مستوردين --}}
+    <div class="col-md-2 col-sm-6">
+        <div class="small-box bg-danger shadow-sm">
+            <div class="inner">
+                <h3 class="text-white">{{ $expiredImporters }}</h3>
+                <p class="text-white">سجل المستوردين</p>
+            </div>
+            <div class="icon"><i class="fas fa-ship"></i></div>
+        </div>
+    </div>
+
+
+    اجمالي السجلات التجارية 
+    اجمالي التراخيص
+    اجمالي الغرف التجارية
+    اجمالي المستوردين
+    
+
+    {{-- عرض رسائل النجاح --}}
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show text-right" role="alert" style="direction: rtl;">
+        <i class="fas fa-check-circle"></i> {{ session('success') }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+@endif
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body p-3">
+        <div class="row align-items-center" style="direction: rtl;">
+            <div class="col-md-3 mb-2 mb-md-0 text-right">
+                 <a href="{{ route('chambers.create') }}"class="btn btn-info btn-block shadow-sm text-white font-weight-bold">
+                    <i class="fas fa-plus-circle"></i> إضافة اشتراك جديد
+                </a>
+            </div>
+            
+
+            <div class="col-md-9">
+                <form action="{{ route('chambers.index') }}" method="GET" class="m-0">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="ابحث برقم العضوية أو اسم الشركة..." 
+                               value="{{ request('search') }}" 
+                               style="border-radius: 0 5px 5px 0;">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-primary" style="border-radius: 5px 0 0 5px;">
+                                <i class="fas fa-search"></i> بحث
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+الترخيص 
+   public function index(Request $request)
+{
+    // جلب التراخيص مع علاقة الشركة
+    $query = License::with('company'); 
+
+    // تطبيق البحث
+    $query->when($request->search, function ($q) use ($request) {
+        return $q->where('license_number', 'like', '%' . $request->search . '%') // رقم الترخيص
+                 ->orWhereHas('company', function($subQuery) use ($request) {
+                     $subQuery->where('name', 'like', '%' . $request->search . '%'); // اسم الشركة
+                 });
+    });
+
+    $licenses = $query->latest()->paginate(10);
+
+        return view('companies.licenses.index', compact('licenses'));
+    }
