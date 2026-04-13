@@ -74,6 +74,11 @@
                         <p>لوحة التقارير العامة</p>
                     </a>
                 </li>
+                   <li class="nav-item d-none d-sm-inline-block">
+    <a href="#" class="nav-link" data-toggle="modal" data-target="#contactModal">
+        <i class="fas fa-headset ml-3"></i> اتصل بنا
+    </a>
+</li>
             </ul>
         </nav>
     </div>

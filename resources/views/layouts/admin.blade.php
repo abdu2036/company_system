@@ -148,6 +148,54 @@ function confirmLogout() {
 }
 </script>
 @yield('js') 
+<div class="modal fade" id="contactModal" tabindex="-1" role="dialog" aria-labelledby="contactModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden;">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title font-weight-bold" id="contactModalLabel">
+                    <i class="fas fa-headset ml-2"></i> الدعم الفني
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            
+            <div class="modal-body text-center p-4">
+                <div class="mb-4">
+                    <h3 class="font-weight-bold text-dark">Albuazi_soft</h3>
+                    <p class="text-muted">للدعم الفني والاستفسارات البرمجية</p>
+                </div>
 
+                <div class="row">
+                    <div class="col-6">
+                        <div class="p-3 border rounded shadow-sm" style="background-color: #f8f9fa;">
+                            <i class="fas fa-phone-alt fa-2x text-primary mb-2"></i>
+                            <p class="small text-muted mb-1">اتصال مباشر</p>
+                            <a href="tel:0912028008" class="h6 font-weight-bold d-block text-primary" style="direction: ltr;">0912028008</a>
+                        </div>
+                    </div>
+                    
+                    <div class="col-6">
+                        <div class="p-3 border rounded shadow-sm" style="background-color: #f8f9fa;">
+                            <i class="fab fa-whatsapp fa-2x text-success mb-2"></i>
+                            <p class="small text-muted mb-1">واتساب</p>
+                            <a href="https://wa.me/218912028008" target="_blank" class="h6 font-weight-bold d-block text-success" style="direction: ltr;">0912028008</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top">
+                    <p class="small text-muted mb-0">
+                        <i class="fas fa-map-marker-alt ml-1"></i> طرابلس - ليبيا
+                    </p>
+                </div>
+            </div>
+
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary btn-block" data-dismiss="modal" style="border-radius: 10px;">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

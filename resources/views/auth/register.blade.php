@@ -3,99 +3,102 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>نظام إدارة الشركات | تسجيل حساب جديد</title>
+  <title>نظام إدارة الشركات | إنشاء حساب</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ asset('assets/admin/plugins/fontawesome-free/css/all.min.css') }}">
   <link rel="stylesheet" href="{{ asset('assets/admin/dist/css/adminlte.min.css') }}">
   
   <style>
-    body { font-family: 'Cairo', sans-serif; }
-    .register-page { background: #f4f6f9; }
-    .card { border-radius: 15px; border-top: 5px solid #28a745; /* لون أخضر للتمييز عن الدخول */ }
-    .input-group-text { background-color: #f8f9fa; width: 45px; justify-content: center; }
+    body { font-family: 'Cairo', sans-serif; background-color: #f0f2f5; height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center; }
+    
+    .login-container { 
+        width: 100%; 
+        max-width: 900px; 
+        background: #fff; 
+        border-radius: 20px; 
+        overflow: hidden; 
+        display: flex; 
+        /* --- التعديل الجوهري لظهور القسم الأخضر على اليمين --- */
+        
+        /* ---------------------------------------------------- */
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+        margin: 15px; 
+    }
+    
+    .login-header-section { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); color: white; padding: 40px; width: 40%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+    .login-header-section img { width: 100px; margin-bottom: 20px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2)); }
+    .login-form-section { padding: 40px; width: 60%; background: white; text-align: right; }
+    .form-control { border-radius: 10px; padding: 10px 15px; height: auto; border: 1px solid #ddd; }
+    .btn-success { border-radius: 10px; padding: 10px; font-weight: 700; background: #28a745; border: none; transition: all 0.3s; }
+    .btn-success:hover { background: #1e7e34; transform: translateY(-2px); }
+    
+    /* تعديل حواف الأيقونات لتناسب الـ RTL */
+    .input-group-text { border-radius: 10px 0 0 10px !important; background-color: #f8f9fa; }
+    
+    @media (max-width: 768px) { .login-container { flex-direction: column; max-width: 450px; } .login-header-section, .login-form-section { width: 100%; } }
   </style>
 </head>
-<body class="hold-transition register-page">
-<div class="register-box" style="width: 400px;">
-  <div class="register-logo">
-    <a href="#"><b>نظام إدارة</b> الشركات</a>
-  </div>
+<body class="hold-transition">
 
-  <div class="card shadow-lg">
-    <div class="card-body register-card-body">
-      <p class="login-box-msg font-weight-bold">إنشاء حساب  جديد</p>
-
-      <form method="POST" action="{{ route('register') }}">
-        @csrf
-
-        <div class="input-group mb-3 text-right">
-          <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" placeholder="الاسم الكامل" value="{{ old('name') }}" required autofocus>
-          <div class="input-group-append">
-            <div class="input-group-text">
-              <span class="fas fa-user text-success"></span>
-            </div>
-          </div>
-          @error('name')
-            <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
-          @enderror
-        </div>
-
-        <div class="input-group mb-3">
-          <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" placeholder="البريد الإلكتروني" value="{{ old('email') }}" required>
-          <div class="input-group-append">
-            <div class="input-group-text">
-              <span class="fas fa-envelope text-success"></span>
-            </div>
-          </div>
-          @error('email')
-            <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
-          @enderror
-        </div>
-
-        <div class="input-group mb-3">
-          <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="كلمة المرور" required>
-          <div class="input-group-append">
-            <div class="input-group-text">
-              <span class="fas fa-lock text-success"></span>
-            </div>
-          </div>
-          @error('password')
-            <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
-          @enderror
-        </div>
-
-        <div class="input-group mb-3">
-          <input type="password" name="password_confirmation" class="form-control" placeholder="تأكيد كلمة المرور" required>
-          <div class="input-group-append">
-            <div class="input-group-text">
-              <span class="fas fa-check-double text-success"></span>
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-12">
-            <button type="submit" class="btn btn-success btn-block shadow-sm font-weight-bold">
-               إتمام التسجيل <i class="fas fa-user-plus mr-1"></i>
-            </button>
-          </div>
-        </div>
-      </form>
-
-      <hr>
-      <div class="text-center">
-        <p class="mb-0">
-            <span>لديك حساب بالفعل؟</span>
-            <a href="{{ route('login') }}" class="font-weight-bold text-primary">تسجيل الدخول</a>
-        </p>
-      </div>
+<div class="login-container shadow-lg">
+  
+    <div class="login-header-section">
+        <img src="{{ asset('assets/admin/dist/img/AdminLTELogo.png') }}" alt="Logo">
+        <h3 class="font-weight-bold">انضم إلينا!</h3>
+        <p>ابدأ بتنظيم بيانات شركاتك الآن</p>
     </div>
-  </div>
-</div>
 
-<script src="{{ asset('assets/admin/plugins/jquery/jquery.min.js') }}"></script>
-<script src="{{ asset('assets/admin/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-<script src="{{ asset('assets/admin/dist/js/adminlte.min.js') }}"></script>
+    <div class="login-form-section">
+        <div class="text-center mb-4">
+            <h4 class="text-dark font-weight-bold">إنشاء حساب جديد</h4>
+        </div>
+
+        <form method="POST" action="{{ route('register') }}">
+            @csrf
+            
+            <div class="form-group mb-2 text-right">
+                <label class="small font-weight-bold">الاسم الكامل</label>
+                <div class="input-group">
+                    <input type="text" name="name" class="form-control" placeholder="أدخل اسمك" required autofocus>
+                    <div class="input-group-append"><div class="input-group-text"><span class="fas fa-user"></span></div></div>
+                </div>
+            </div>
+
+            <div class="form-group mb-2 text-right">
+                <label class="small font-weight-bold">البريد الإلكتروني</label>
+                <div class="input-group">
+                    <input type="email" name="email" class="form-control" placeholder="mail@example.com" required>
+                    <div class="input-group-append"><div class="input-group-text"><span class="fas fa-envelope"></span></div></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 text-right">
+                    <div class="form-group mb-2">
+                        <label class="small font-weight-bold">كلمة المرور</label>
+                        <div class="input-group">
+                            <input type="password" name="password" class="form-control" placeholder="******" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-right">
+                    <div class="form-group mb-3">
+                        <label class="small font-weight-bold">تأكيد الكلمة</label>
+                        <div class="input-group">
+                            <input type="password" name="password_confirmation" class="form-control" placeholder="******" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-block shadow-sm">تسجيل الحساب</button>
+        </form>
+
+        <div class="text-center mt-3">
+            <p class="mb-0 small">لديك حساب بالفعل؟ <a href="{{ route('login') }}" class="text-success font-weight-bold">دخول</a></p>
+        </div>
+    </div>
+</div>
 </body>
 </html>

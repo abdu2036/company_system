@@ -5,45 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>نظام إدارة الشركات | استعادة كلمة المرور</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ asset('assets/admin/plugins/fontawesome-free/css/all.min.css') }}">
   <link rel="stylesheet" href="{{ asset('assets/admin/dist/css/adminlte.min.css') }}">
   <style>
-    body { font-family: 'Cairo', sans-serif; background: #f4f6f9; }
-    .card { border-radius: 15px; border-top: 5px solid #17a2b8; }
+    body { font-family: 'Cairo', sans-serif; background-color: #f0f2f5; height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; }
+    .reset-card { max-width: 450px; width: 100%; background: #fff; border-radius: 15px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 5px solid #ffc107; text-align: center; }
+    .form-control { border-radius: 10px; padding: 12px; }
+    .btn-warning { border-radius: 10px; font-weight: 700; color: #212529; }
   </style>
 </head>
-<body class="hold-transition login-page">
-<div class="login-box">
-  <div class="login-logo"><b>نظام إدارة</b> الشركات</div>
-  <div class="card shadow-lg">
-    <div class="card-body login-card-body">
-      <p class="login-box-msg font-weight-bold">استعادة كلمة المرور</p>
-      
-      @if (session('status'))
-          <div class="alert alert-success text-center mb-3">
-              {{ session('status') }}
-          </div>
-      @endif
+<body>
 
-      <form method="POST" action="{{ route('password.email') }}">
-        @csrf
-        <div class="input-group mb-3">
-          <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" placeholder="البريد الإلكتروني" required autofocus>
-          <div class="input-group-append">
-            <div class="input-group-text"><span class="fas fa-envelope"></span></div>
-          </div>
-          @error('email')
-            <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
-          @enderror
-        </div>
-        <button type="submit" class="btn btn-info btn-block text-white font-weight-bold">إرسال رابط الاستعادة</button>
-      </form>
-
-      <p class="mt-3 mb-1 text-center">
-        <a href="{{ route('login') }}" class="text-secondary"><i class="fas fa-arrow-right"></i> العودة للدخول</a>
-      </p>
+<div class="reset-card">
+    <div class="mb-4">
+        <i class="fas fa-key fa-3x text-warning mb-3"></i>
+        <h4 class="font-weight-bold">نسيت كلمة المرور؟</h4>
+        <p class="text-muted small">أدخل بريدك الإلكتروني وسنرسل لك رابطاً لتعيين كلمة مرور جديدة.</p>
     </div>
-  </div>
+
+    @if (session('status'))
+        <div class="alert alert-success small mb-3">{{ session('status') }}</div>
+    @endif
+
+    <form method="POST" action="{{ route('password.email') }}">
+        @csrf
+        <div class="form-group text-right">
+            <label class="small font-weight-bold">البريد الإلكتروني</label>
+            <input type="email" name="email" class="form-control" placeholder="mail@example.com" required autofocus>
+        </div>
+
+        <button type="submit" class="btn btn-warning btn-block shadow-sm mb-3">إرسال رابط الاستعادة</button>
+    </form>
+
+    <a href="{{ route('login') }}" class="small text-muted font-weight-bold"><i class="fas fa-arrow-right ml-1"></i> العودة لتسجيل الدخول</a>
 </div>
+
 </body>
 </html>
