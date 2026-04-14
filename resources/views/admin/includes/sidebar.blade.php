@@ -1,9 +1,33 @@
 <aside class="main-sidebar sidebar-dark-primary elevation-4" style="direction: rtl; text-align: right;">
-    <a href="{{ route('companies.index') }}" class="brand-link shadow-sm">
-        <img src="{{ asset('assets/admin/dist/img/AdminLTELogo.png') }}" alt="AdminLTE Logo" 
-             class="brand-image img-circle elevation-3" style="opacity: .8; float: right; margin-left: .8rem; margin-right: .5rem;">
-        <span class="brand-text font-weight-light">نظام إدارة الشركات</span>
-    </a>
+<a href="{{ route('companies.index') }}" 
+   class="brand-link shadow-sm text-center py-3" 
+   style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 1px solid #dee2e6;">
+    
+    <img src="{{ asset('assets/admin/dist/img/2026.png') }}" 
+         alt="A-Soft Icon" 
+         class="brand-image img-circle elevation-3 shadow-lg" 
+         style="opacity: 1; 
+                float: none; 
+                margin: 0 auto; 
+                display: block; 
+                max-height: 70px; /* زيادة حجم الصورة بشكل ملحوظ لبروزها */
+                border: 2px solid #fff; /* إضافة إطار أبيض لزيادة البروز */
+                background-color: #fff; 
+                transition: transform 0.3s ease; /* إضافة تأثير حركي بسيط */
+                ">
+    
+    <span class="brand-text font-weight-bold d-block mt-2" 
+          style="font-family: 'Cairo', sans-serif; 
+                 color: #1e4f9c; 
+                 font-size: 1.2rem; /* تكبير حجم الخط قليلاً */
+                 line-height: 1.2;">
+        Albuazi_<span class="text-success">soft</span>
+    </span>
+    
+    <span class="brand-text d-block text-muted small mt-1" style="font-family: 'Cairo', sans-serif;">
+        لإدارة الشركات و التراخيص
+    </span>
+</a>
 
     <div class="sidebar">
         <nav class="mt-2">

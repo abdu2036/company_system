@@ -108,7 +108,18 @@
     <div class="login-container">
         
         <div class="login-header-section">
-            <img src="https://keefwiki.com/business/wp-content/uploads/sites/3/2015/03/business-technology-e1428843871152.jpg" alt="Logo" style="width: 120px; margin-bottom: 20px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2)); ;">
+           <img src="{{ asset('assets/admin/dist/img/2026.png') }}" 
+         alt="A-Soft Icon" 
+         class="brand-image img-circle elevation-3 shadow-lg" 
+         style="opacity: 1; 
+                float: none; 
+                margin: 0 auto; 
+                display: block; 
+                max-height: 70px; /* زيادة حجم الصورة بشكل ملحوظ لبروزها */
+                border: 2px solid #fff; /* إضافة إطار أبيض لزيادة البروز */
+                background-color: #fff; 
+                transition: transform 0.3s ease; /* إضافة تأثير حركي بسيط */
+                ">
             <h3 class="font-weight-bold">أهلاً بعودتك!</h3>
             <p>نظام إدارة الشركات يرحب بكم</p>
         </div>
