@@ -167,3 +167,6 @@ Route::get('/companies/{id}/documents', [CompanyDocumentController::class, 'getC
 
 // مسار الرفع
 Route::post('/companies/{id}/documents/upload', [CompanyDocumentController::class, 'store']);
+
+// مسار الحذف
+Route::delete('/companies/{id}/documents/{documentId}', [CompanyDocumentController::class, 'destroy']);

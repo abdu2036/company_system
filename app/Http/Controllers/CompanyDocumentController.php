@@ -100,4 +100,24 @@ class CompanyDocumentController extends Controller
 
         return response()->json(['status' => 'error', 'message' => 'فشل رفع الملف'], 400);
     }
+public function destroy($companyId, $documentId) // أضف المتغير الأول هنا
+{
+    try {
+        // نستخدم documentId للحذف
+        $document = CompanyDocument::findOrFail($documentId);
+        
+        $relativeWeight = ltrim(str_replace('storage/', '', $document->file_path), '/');
+
+        if (Storage::disk('public')->exists($relativeWeight)) {
+            Storage::disk('public')->delete($relativeWeight);
+        }
+
+        $document->delete();
+
+        return response()->json(['status' => 'success']);
+
+    } catch (\Exception $e) {
+        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+    }
+}
 }

@@ -24,7 +24,7 @@
         </div>
 
         <div class="card-body p-0">
-            <div class="table-responsive text-right">
+            <div class="table-responsive text-left">
                 <table class="table table-hover table-striped mb-0" id="archiveTable" style="direction: rtl;">
                     <thead class="bg-light">
                         <tr>
@@ -112,19 +112,28 @@
                     let fileUrl = `{{ asset('') }}${doc.file_path}`;
                     
                     rows += `
-                    <tr>
-                        <td class="text-right align-middle">
-                            <div class="font-weight-bold">${doc.document_name}</div>
-                            <div class="small text-muted italic">${doc.notes ? doc.notes : '---'}</div>
-                        </td>
-                        <td class="align-middle small">${doc.created_at}</td>
-                        <td class="align-middle"><span class="badge badge-light border font-weight-normal">${doc.file_size}</span></td>
-                        <td class="align-middle">
-                            <a href="${fileUrl}" target="_blank" class="btn btn-sm btn-primary shadow-sm rounded-circle" title="فتح الملف">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                        </td>
-                    </tr>`;
+                   <tr>
+    <td class="text-left align-middle">
+        <div class="font-weight-bold">${doc.document_name}</div>
+        <div class="small text-muted italic">${doc.notes ? doc.notes : '---'}</div>
+    </td>
+    <td class="align-middle small text-center">${doc.created_at}</td>
+    <td class="align-middle text-center">
+        <span class="badge badge-light border font-weight-normal">${doc.file_size}</span>
+    </td>
+    <td class="align-middle text-center">
+        <div class="btn-group">
+            <a href="${fileUrl}" target="_blank" class="btn btn-sm btn-info shadow-sm rounded-circle ml-1" title="فتح الملف">
+                <i class="fas fa-eye"></i>
+            </a>
+            
+            <button type="button" class="btn btn-sm btn-danger shadow-sm rounded-circle" 
+                    onclick="deleteDocument(${doc.id}, ${companyId})" title="حذف الملف">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    </td>
+</tr>`;
                 });
             } else {
                 rows = `
@@ -184,5 +193,37 @@
             }
         });
     }
+function deleteDocument(docId, companyId) {
+    Swal.fire({
+        title: 'هل أنت متأكد؟',
+        text: "سيتم حذف هذا الملف نهائياً من أرشيف Albuazi_soft",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'نعم، احذف الآن',
+        cancelButtonText: 'إلغاء'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                // التعديل هنا: إضافة companyId قبل documents
+                url: `/companies/${companyId}/documents/${docId}`, 
+                type: 'DELETE',
+                data: { 
+                    "_token": "{{ csrf_token() }}" 
+                },
+                success: function(response) {
+                    Swal.fire({ icon: 'success', title: 'تم الحذف!', timer: 1500, showConfirmButton: false });
+                    // تحديث الجدول
+                    openDocumentsModal(companyId, $('#modalTitle').text().replace('مستندات شركة: ', ''));
+                },
+                error: function(xhr) {
+                    // هذا ما يظهر لك الآن بسبب خطأ في المسار 404
+                    Swal.fire('خطأ!', 'فشل الحذف، تأكد من إعدادات السيرفر.', 'error');
+                }
+            });
+        }
+    });
+}
 </script>
 @endsection
