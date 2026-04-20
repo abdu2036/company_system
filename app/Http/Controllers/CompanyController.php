@@ -51,16 +51,21 @@ public function create()
     public function store(Request $request)
     {
         // التحقق من البيانات
-        $request->validate([
-            'name'                => 'required|string|max:255',
-            'activity'            => 'required|string|max:255',
-            'address'             => 'required|string',
-            'cr_number'           => 'required|string|unique:commercial_registers,cr_number',
-            'phone'               => 'required|string',
-            'representative_name' => 'required|string',
-            'cr_issue_date'       => 'required|date',
-            'cr_expiry_date'      => 'required|date|after:cr_issue_date',
-        ]);
+    $request->validate([
+        // أضفنا unique:companies,name للتأكد من عدم تكرار الاسم في جدول الشركات
+        'name'                => 'required|string|max:255|unique:companies,name', 
+        'activity'            => 'required|string|max:255',
+        'address'             => 'required|string',
+        'cr_number'           => 'required|string|unique:commercial_registers,cr_number',
+        'phone'               => 'required|string',
+        'representative_name' => 'required|string',
+        'cr_issue_date'       => 'required|date',
+        'cr_expiry_date'      => 'required|date|after:cr_issue_date',
+    ], [
+        // رسائل خطأ مخصصة بالعربي لتجربة مستخدم أفضل
+        'name.unique' => 'خطأ: شركة ( ' . $request->name . ' ) مسجلة بالفعل في النظام ولا يمكن تكرارها.',
+        'cr_number.unique' => 'رقم السجل التجاري هذا مستخدم من قبل شركة أخرى.',
+    ]);
 
         DB::beginTransaction();
 
