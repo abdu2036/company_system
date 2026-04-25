@@ -8,6 +8,7 @@ use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\ImporterRecordController; // تأكد من استدعاء الكنترول
 use App\Http\Controllers\CommercialRegisterController;
 use App\Http\Controllers\CompanyDocumentController; // تأكد من استدعاء الكنترولر الجديد
+use App\Http\Controllers\FinanceController; // تأكد من استدعاء الكنترولر الجديد
 /*
 /*
 |--------------------------------------------------------------------------
@@ -170,3 +171,25 @@ Route::post('/companies/{id}/documents/upload', [CompanyDocumentController::clas
 
 // مسار الحذف
 Route::delete('/companies/{id}/documents/{documentId}', [CompanyDocumentController::class, 'destroy']);
+
+
+
+
+// مسارات النظام المالي
+Route::prefix('finance')->group(function () {
+    // عرض قائمة الشركات لاختيار واحدة
+    Route::get('/companies', [FinanceController::class, 'index'])->name('finance.index');
+    
+    // عرض صفحة الفاتورة لشركة معينة
+    Route::get('/create/{company_id}', [FinanceController::class, 'create'])->name('finance.create');
+    
+    // حفظ الفاتورة
+    Route::post('/store', [FinanceController::class, 'store'])->name('finance.store');
+    // عرض تفاصيل الفواتير لشركة معينة
+    Route::get('/finance/show/{company_id}', [FinanceController::class, 'show'])->name('finance.show');
+
+    // مسار تحديث الدفعة المالية (التسوية)
+Route::post('/finance/update-payment/{id}', [App\Http\Controllers\FinanceController::class, 'updatePayment'])->name('finance.update_payment');
+// مسار طباعة الفاتورة
+Route::get('/finance/print/{id}', [App\Http\Controllers\FinanceController::class, 'printInvoice'])->name('finance.print');
+});

@@ -1,0 +1,54 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+ public function up(): void
+{
+    // 1. جدول الخدمات الثابتة (الـ 16 بند)
+    Schema::create('finance_services', function (Blueprint $table) {
+        $table->id();
+        $table->string('name'); // اسم الخدمة
+        $table->timestamps();
+    });
+
+    // 2. جدول الفاتورة (رأس العملية المالية)
+    Schema::create('invoices', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
+        $table->decimal('total_amount', 10, 2)->default(0); // المجموع
+        $table->decimal('paid_amount', 10, 2)->default(0);  // الواصل
+        $table->decimal('remaining_amount', 10, 2)->default(0); // الباقي
+        $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+        $table->timestamps();
+    });
+
+    // 3. جدول تفاصيل الفاتورة (الأسطر)
+    Schema::create('invoice_items', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('invoice_id')->constrained('invoices')->onDelete('cascade');
+        $table->string('service_name'); // نخزن الاسم هنا لضمان بقائه حتى لو تغير اسم الخدمة مستقبلاً
+        $table->string('action')->nullable(); // تأسيس، تجديد، تعديل
+        $table->integer('quantity')->default(1); // العدد
+        $table->decimal('price', 10, 2)->default(0); // المبلغ المالي
+        $table->text('notes')->nullable(); // ملاحظات
+        $table->timestamps();
+    });
+}
+
+    /**
+     * Reverse the migrations.
+     */
+ public function down(): void
+{
+    Schema::dropIfExists('invoice_items');
+    Schema::dropIfExists('invoices');
+    Schema::dropIfExists('finance_services');
+}
+};

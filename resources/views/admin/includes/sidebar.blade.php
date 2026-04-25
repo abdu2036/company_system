@@ -98,6 +98,29 @@
                         <p>لوحة التقارير العامة</p>
                     </a>
                 </li>
+                <li class="nav-item has-treeview {{ request()->is('finance*') ? 'menu-open' : '' }}">
+    <a href="#" class="nav-link {{ request()->is('finance*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-calculator text-success"></i>
+        <p>
+            الحسابات المالية
+            <i class="right fas fa-angle-left"></i>
+        </p>
+    </a>
+    <ul class="nav nav-treeview">
+        <li class="nav-item">
+            <a href="{{ url('/finance/companies') }}" class="nav-link {{ request()->is('finance/companies') ? 'active' : '' }}">
+                <i class="fas fa-file-invoice-dollar nav-icon"></i>
+                <p>سجلات الشركات المالية</p>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ url('/finance/services') }}" class="nav-link {{ request()->is('finance/services') ? 'active' : '' }}">
+                <i class="fas fa-list-ul nav-icon"></i>
+                <p>إدارة بنود الخدمات</p>
+            </a>
+        </li>
+    </ul>
+</li>
                    <li class="nav-item d-none d-sm-inline-block">
     <a href="#" class="nav-link" data-toggle="modal" data-target="#contactModal">
         <i class="fas fa-headset ml-3"></i> اتصل بنا

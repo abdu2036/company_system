@@ -48,6 +48,12 @@ public function documents()
         return $this->hasMany(CompanyDocument::class);
     }
 
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class);
+    }
     
 }
+
+
 
