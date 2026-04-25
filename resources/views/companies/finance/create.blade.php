@@ -1,5 +1,5 @@
-@extends('layouts.admin') {{-- تأكد من اسم الليوت عندك --}}
-@section('title', 'السجل المالي للشركة') {{-- عنوان الصفحة --}}
+@extends('layouts.admin')
+@section('title', 'السجل المالي للشركة')
 @section('content')
 <div class="container-fluid" style="direction: rtl; text-align: right; font-family: 'Cairo', sans-serif;">
     <div class="card card-success card-outline shadow-lg">
@@ -15,6 +15,12 @@
             <input type="hidden" name="company_id" value="{{ $company->id }}">
 
             <div class="card-body">
+                <div class="mb-3 text-right">
+                    <button type="button" class="btn btn-info btn-sm" onclick="addExtraService()">
+                        <i class="fas fa-plus-circle ml-1"></i> إضافة خدمة مخصصة +
+                    </button>
+                </div>
+
                 <table class="table table-bordered table-striped text-center">
                     <thead class="bg-success text-white">
                         <tr>
@@ -39,15 +45,14 @@
                                     <option value="تأسيس">تأسيس</option>
                                     <option value="تجديد">تجديد</option>
                                     <option value="تعديل">تعديل</option>
+                                    <option value="المكتب">المكتب</option>
                                 </select>
                             </td>
                             <td>
-                                <input type="number" name="services[{{ $index }}][quantity]" 
-                                       class="form-control qty-input" value="1" min="1">
+                                <input type="number" name="services[{{ $index }}][quantity]" class="form-control qty-input" value="1" min="1">
                             </td>
                             <td>
-                                <input type="number" name="services[{{ $index }}][price]" 
-                                       class="form-control price-input" placeholder="0.00">
+                                <input type="number" name="services[{{ $index }}][price]" class="form-control price-input" step="0.01" placeholder="0.00">
                             </td>
                             <td>
                                 <input type="text" name="services[{{ $index }}][notes]" class="form-control" placeholder="ملاحظات...">
@@ -91,8 +96,46 @@
     </div>
 </div>
 
-{{-- كود الحسابات التلقائية --}}
 <script>
+// دالة واحدة شاملة للحسابات وإضافة الصفوف
+function addExtraService() {
+    const tbody = document.getElementById('finance-table-body');
+    const index = tbody.rows.length;
+    
+    const newRow = `
+        <tr class="table-info">
+            <td>${index + 1}</td>
+            <td>
+                <input type="text" name="services[${index}][name]" class="form-control" placeholder="اسم الخدمة..." required>
+            </td>
+            <td>
+                <select name="services[${index}][action]" class="form-control">
+                    <option value="تأسيس">تأسيس</option>
+                    <option value="تجديد">تجديد</option>
+                    <option value="تعديل">تعديل</option>
+                    <option value="المكتب">المكتب</option>
+                </select>
+            </td>
+            <td>
+                <input type="number" name="services[${index}][quantity]" class="form-control qty-input" value="1" min="1">
+            </td>
+            <td>
+                <input type="number" name="services[${index}][price]" class="form-control price-input" placeholder="0.00" step="0.01">
+            </td>
+            <td>
+                <div class="d-flex">
+                    <input type="text" name="services[${index}][notes]" class="form-control" placeholder="ملاحظات...">
+                    <button type="button" class="btn btn-danger btn-sm mr-2" onclick="this.closest('tr').remove(); calculateTotals();">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `;
+    tbody.insertAdjacentHTML('beforeend', newRow);
+}
+
+// مراقب المدخلات
 document.addEventListener('input', function(e) {
     if (e.target.classList.contains('price-input') || e.target.classList.contains('qty-input') || e.target.id === 'paid-amount') {
         calculateTotals();
@@ -101,13 +144,17 @@ document.addEventListener('input', function(e) {
 
 function calculateTotals() {
     let grandTotal = 0;
-    const prices = document.querySelectorAll('.price-input');
-    const quantities = document.querySelectorAll('.qty-input');
+    const rows = document.querySelectorAll('#finance-table-body tr');
 
-    prices.forEach((priceInput, index) => {
-        let val = parseFloat(priceInput.value) || 0;
-        let qty = parseFloat(quantities[index].value) || 1;
-        grandTotal += (val * qty);
+    rows.forEach((row) => {
+        const priceInput = row.querySelector('.price-input');
+        const qtyInput = row.querySelector('.qty-input');
+        
+        if (priceInput && qtyInput) {
+            let val = parseFloat(priceInput.value) || 0;
+            let qty = parseFloat(qtyInput.value) || 0;
+            grandTotal += (val * qty);
+        }
     });
 
     const paid = parseFloat(document.getElementById('paid-amount').value) || 0;
