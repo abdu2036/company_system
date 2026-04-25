@@ -52,6 +52,12 @@ public function documents()
     {
         return $this->hasMany(Invoice::class);
     }
+
+    public function finances()
+{
+    // نربط الشركة بجدول الفواتير (Invoices)
+    return $this->hasMany(Invoice::class, 'company_id');
+}
     
 }
 

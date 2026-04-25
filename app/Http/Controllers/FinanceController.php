@@ -13,9 +13,12 @@ class FinanceController extends Controller
     // عرض الشركات لاختيار شركة لفتح حسابها
  // عرض الشركات لاختيار شركة لفتح حسابها
 public function index() {
-    $companies = Company::latest()->paginate(10);
+    // جلب الشركات مع حساب مجموع العمود remaining_amount من جدول finances لكل شركة
+    $companies = Company::withSum('finances as total_debt', 'remaining_amount')
+        ->latest()
+        ->paginate(10);
     
-    // التعديل هنا: أضفنا اسم المجلد 'companies' قبل 'finance'
+    // إرسال البيانات للمجلد الصحيح حسب مسارك
     return view('companies.finance.index', compact('companies'));
 }
 
