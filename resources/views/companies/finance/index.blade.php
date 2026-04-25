@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-
+@section('title', 'سجلات الشركات المالية')
 @section('content')
 <div class="container-fluid" style="direction: rtl; text-align: right;">
     <div class="card card-primary card-outline">

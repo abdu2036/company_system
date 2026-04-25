@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-
+@section('title', 'تاريخ العمليات المالية')
 @section('content')
 <div class="container-fluid" style="direction: rtl; text-align: right; font-family: 'Cairo', sans-serif;">
     <div class="card shadow-lg border-0">

@@ -1,5 +1,5 @@
 @extends('layouts.admin') {{-- تأكد من اسم الليوت عندك --}}
-
+@section('title', 'السجل المالي للشركة') {{-- عنوان الصفحة --}}
 @section('content')
 <div class="container-fluid" style="direction: rtl; text-align: right; font-family: 'Cairo', sans-serif;">
     <div class="card card-success card-outline shadow-lg">
