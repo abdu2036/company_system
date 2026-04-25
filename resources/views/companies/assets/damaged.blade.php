@@ -1,13 +1,10 @@
 @extends('layouts.admin')
-
+@section('title', 'مخزن الأصول التالفة')
 
 @section('content')
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4 no-print">
-        <div>
-            <h3 class="text-danger font-weight-bold mb-0"><i class="fas fa-recycle mr-2"></i> مخزن الأصول التالفة</h3>
-            <p class="text-muted">إدارة الخسائر والأصول الخارجة عن الخدمة.</p>
-        </div>
+       
         <div>
             <button onclick="window.print()" class="btn btn-dark shadow-sm mr-2">
                 <i class="fas fa-print"></i> طباعة التقرير
