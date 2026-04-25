@@ -90,15 +90,7 @@
                     </ul>
                 </li>
 
-                <li class="nav-header text-left">التقارير والإحصائيات</li>
-
-                <li class="nav-item">
-                    <a href="{{ url('/reports') }}" class="nav-link {{ request()->is('reports*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-chart-line text-danger"></i>
-                        <p>لوحة التقارير العامة</p>
-                    </a>
-                </li>
-                <li class="nav-item has-treeview {{ request()->is('finance*') ? 'menu-open' : '' }}">
+                                <li class="nav-item has-treeview {{ request()->is('finance*') ? 'menu-open' : '' }}">
     <a href="#" class="nav-link {{ request()->is('finance*') ? 'active' : '' }}">
         <i class="nav-icon fas fa-calculator text-success"></i>
         <p>
@@ -113,14 +105,19 @@
                 <p>سجلات الشركات المالية</p>
             </a>
         </li>
-        <li class="nav-item">
-            <a href="{{ url('/finance/services') }}" class="nav-link {{ request()->is('finance/services') ? 'active' : '' }}">
-                <i class="fas fa-list-ul nav-icon"></i>
-                <p>إدارة بنود الخدمات</p>
-            </a>
-        </li>
+        
     </ul>
 </li>
+
+                <li class="nav-header text-left">التقارير والإحصائيات</li>
+
+                <li class="nav-item">
+                    <a href="{{ url('/reports') }}" class="nav-link {{ request()->is('reports*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-chart-line text-danger"></i>
+                        <p>لوحة التقارير العامة</p>
+                    </a>
+                </li>
+
                    <li class="nav-item d-none d-sm-inline-block">
     <a href="#" class="nav-link" data-toggle="modal" data-target="#contactModal">
         <i class="fas fa-headset ml-3"></i> اتصل بنا
