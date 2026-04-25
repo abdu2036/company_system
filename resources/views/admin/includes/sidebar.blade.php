@@ -109,6 +109,49 @@
     </ul>
 </li>
 
+<li class="nav-item has-treeview {{ request()->is('assets*') ? 'menu-open' : '' }}">
+    <a href="#" class="nav-link {{ request()->is('assets*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-boxes text-warning"></i>
+        <p>
+            إدارة الأصول
+            <i class="right fas fa-angle-left"></i>
+        </p>
+    </a>
+    <ul class="nav nav-treeview">
+        
+        <li class="nav-item">
+            <a href="{{ route('assets.index') }}" class="nav-link {{ request()->is('assets') ? 'active' : '' }}">
+                <i class="fas fa-list-ul nav-icon"></i>
+                <p>الأصول النشطة</p>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ route('assets.damaged') }}" class="nav-link {{ request()->is('assets/damaged') ? 'active' : '' }}">
+                <i class="fas fa-dumpster nav-icon"></i>
+                <p>مخزن التوالف</p>
+            </a>
+        </li>
+        <li class="nav-item">
+    <a href="{{ route('assets.maintenance_logs') }}" class="nav-link">
+        <i class="fas fa-tools"></i>
+        <span>سجل الصيانة</span>
+    </a>
+</li>
+<li class="nav-item">
+            <a href="{{ route('assets.dashboard') }}" class="nav-link {{ request()->is('assets/dashboard') ? 'active' : '' }}">
+                <i class="fas fa-chart-pie nav-icon"></i>
+                <p>التقارير والإحصائيات</p>
+            </a>
+        </li>
+        <li class="nav-item border-top">
+            <a href="{{ route('assets.create') }}" class="nav-link {{ request()->is('assets/create') ? 'active' : '' }}">
+                <i class="fas fa-plus-circle nav-icon text-primary"></i>
+                <p class="text-primary font-weight-bold">إضافة أصل جديد</p>
+            </a>
+        </li>
+    </ul>
+</li>
+
                 <li class="nav-header text-left">التقارير والإحصائيات</li>
 
                 <li class="nav-item">
@@ -123,6 +166,8 @@
         <i class="fas fa-headset ml-3"></i> اتصل بنا
     </a>
 </li>
+
+
             </ul>
         </nav>
     </div>

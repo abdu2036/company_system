@@ -9,6 +9,8 @@ use App\Http\Controllers\ImporterRecordController; // تأكد من استدعا
 use App\Http\Controllers\CommercialRegisterController;
 use App\Http\Controllers\CompanyDocumentController; // تأكد من استدعاء الكنترولر الجديد
 use App\Http\Controllers\FinanceController; // تأكد من استدعاء الكنترولر الجديد
+use App\Http\Controllers\AssetController; // تأكد من استدعاء الكنترولر الجديد
+
 /*
 /*
 |--------------------------------------------------------------------------
@@ -192,4 +194,31 @@ Route::prefix('finance')->group(function () {
 Route::post('/finance/update-payment/{id}', [App\Http\Controllers\FinanceController::class, 'updatePayment'])->name('finance.update_payment');
 // مسار طباعة الفاتورة
 Route::get('/finance/print/{id}', [App\Http\Controllers\FinanceController::class, 'printInvoice'])->name('finance.print');
+});
+
+// مسارات الأصول    
+// تغيير اسم الرابط الفيزيائي لتجنب التعارض مع مجلد public/assets
+Route::prefix('property-list')->group(function () {
+    Route::get('/dashboard', [AssetController::class, 'dashboard'])->name('assets.dashboard');
+    Route::get('/', [AssetController::class, 'index'])->name('assets.index'); // سيصبح الرابط /property-list/
+    Route::get('/damaged', [AssetController::class, 'damaged'])->name('assets.damaged');
+    Route::get('/create', [AssetController::class, 'create'])->name('assets.create');
+    Route::post('/store', [AssetController::class, 'store'])->name('assets.store');
+ Route::get('/edit/{id}', [AssetController::class, 'edit'])->name('assets.edit');
+
+    // رابط تنفيذ التحديث في قاعدة البيانات (Update) - هذا هو المفقود
+    Route::put('/update/{id}', [AssetController::class, 'update'])->name('assets.update');
+// رابط عرض تفاصيل الأصل (غالباً سيفتح مودال)
+    Route::get('/show/{id}', [AssetController::class, 'show'])->name('assets.show');
+
+    // رابط الاستعادة (تغيير الحالة من تالف إلى مستعمل)
+    Route::post('/restore/{id}', [AssetController::class, 'restore'])->name('assets.restore');
+    Route::post('/assets/{id}/maintenance', [AssetController::class, 'sendToMaintenance'])->name('assets.maintenance');
+Route::post('/assets/{id}/complete-maintenance', [AssetController::class, 'completeMaintenance'])->name('assets.complete-maintenance');
+
+
+// مسار عرض سجل الصيانة الشامل
+Route::get('/assets/maintenance-logs', [AssetController::class, 'maintenanceLogs'])->name('assets.maintenance_logs');
+// مسار تحويل الأصل إلى تالف
+Route::patch('/assets/{id}/move-to-damaged', [AssetController::class, 'moveToDamaged'])->name('assets.move_to_damaged');
 });
