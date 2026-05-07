@@ -1,39 +1,63 @@
 <aside class="main-sidebar sidebar-dark-primary elevation-4" style="direction: rtl; text-align: right;">
-<a href="{{ route('companies.index') }}" 
-   class="brand-link shadow-sm text-center py-3" 
-   style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 1px solid #dee2e6;">
-    
-    <img src="{{ asset('assets/admin/dist/img/2026.png') }}" 
-         alt="A-Soft Icon" 
-         class="brand-image img-circle elevation-3 shadow-lg" 
-         style="opacity: 1; 
-                float: none; 
-                margin: 0 auto; 
-                display: block; 
-                max-height: 70px; /* زيادة حجم الصورة بشكل ملحوظ لبروزها */
-                border: 2px solid #fff; /* إضافة إطار أبيض لزيادة البروز */
-                background-color: #fff; 
-                transition: transform 0.3s ease; /* إضافة تأثير حركي بسيط */
-                ">
-    
-    <span class="brand-text font-weight-bold d-block mt-2" 
-          style="font-family: 'Cairo', sans-serif; 
-                 color: #1e4f9c; 
-                 font-size: 1.2rem; /* تكبير حجم الخط قليلاً */
-                 line-height: 1.2;">
-        Albuazi_<span class="text-success">soft</span>
-    </span>
-    
-    <span class="brand-text d-block text-muted small mt-1" style="font-family: 'Cairo', sans-serif;">
-        لإدارة الشركات و التراخيص
-    </span>
-</a>
+    <a href="{{ route('companies.index') }}" 
+       class="brand-link shadow-sm text-center py-3" 
+       style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 1px solid #dee2e6;">
+        
+        <img src="{{ asset('assets/admin/dist/img/2026.png') }}" 
+             alt="A-Soft Icon" 
+             class="brand-image img-circle elevation-3 shadow-lg" 
+             style="opacity: 1; float: none; margin: 0 auto; display: block; max-height: 70px; border: 2px solid #fff; background-color: #fff; transition: transform 0.3s ease;">
+        
+        <span class="brand-text font-weight-bold d-block mt-2" 
+              style="font-family: 'Cairo', sans-serif; color: #1e4f9c; font-size: 1.2rem; line-height: 1.2;">
+            Albuazi_<span class="text-success">soft</span>
+        </span>
+        
+        <span class="brand-text d-block text-muted small mt-1" style="font-family: 'Cairo', sans-serif;">
+            لإدارة الشركات و التراخيص
+        </span>
+    </a>
 
     <div class="sidebar">
+        @auth
+        {{-- جلب دور المستخدم الحالي يدوياً لضمان الدقة في حالة جمال --}}
+        @php
+            $userRoleInCompany = \Illuminate\Support\Facades\DB::table('model_has_roles')
+                ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                ->join('users', 'users.id', '=', 'model_has_roles.model_id')
+                ->where('users.email', auth()->user()->email)
+                ->value('roles.name');
+        @endphp
+
+        <div class="user-panel mt-3 pb-3 mb-3 d-flex border-bottom" style="border-color: #4b545c !important;">
+            <div class="image">
+                @php
+                    $profilePhoto = auth()->user()->employee->profile_photo ?? null;
+                    $hrmsUrl = "http://localhost/HRMS/storage/"; 
+                @endphp
+
+                <img src="{{ $profilePhoto ? $hrmsUrl . $profilePhoto : asset('assets/admin/dist/img/user2-160x160.jpg') }}" 
+                     class="img-circle elevation-2" 
+                     alt="User Image"
+                     style="width: 2.1rem; height: 2.1rem; object-fit: cover;"
+                     onerror="this.src='{{ asset('assets/admin/dist/img/user2-160x160.jpg') }}';">
+            </div>
+            <div class="info">
+                <a href="#" class="d-block text-white" style="font-family: 'Cairo', sans-serif;">
+                    {{ auth()->user()->employee->full_name ?? auth()->user()->name }}
+                </a>
+                <small class="text-warning">
+                     <i class="fas fa-id-badge"></i> {{ auth()->user()->employee->jobTitle->name ?? 'موظف' }}
+                </small>
+            </div>
+        </div>
+        @endauth
+
         <nav class="mt-2">
-            <ul class="nav nav-pills nav-sidebar flex-column" 
-                data-widget="treeview" role="menu" data-accordion="false">
+            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                 
+                {{-- قسم الشركات: يختفي عن جمال ويظهر للمديرين --}}
+                @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'مدير']))
                 <li class="nav-item has-treeview {{ request()->is('companies*', 'commercial-registers*', 'licenses*', 'chambers*', 'importers*', 'company-archives*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link {{ request()->is('companies*', 'commercial-registers*', 'licenses*', 'chambers*', 'importers*', 'company-archives*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-tasks text-info"></i>
@@ -80,7 +104,6 @@
                                 <p>عرض سجل المستوردين</p>
                             </a>
                         </li>
-                        
                         <li class="nav-item border-top mt-1 shadow-sm">
                             <a href="{{ url('/company-archives') }}" class="nav-link {{ request()->is('company-archives*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-archive text-warning"></i>
@@ -89,85 +112,112 @@
                         </li>
                     </ul>
                 </li>
+                @endif
 
-                                <li class="nav-item has-treeview {{ request()->is('finance*') ? 'menu-open' : '' }}">
-    <a href="#" class="nav-link {{ request()->is('finance*') ? 'active' : '' }}">
-        <i class="nav-icon fas fa-calculator text-success"></i>
-        <p>
-            الحسابات المالية
-            <i class="right fas fa-angle-left"></i>
-        </p>
-    </a>
-    <ul class="nav nav-treeview">
-        <li class="nav-item">
-            <a href="{{ url('/finance/companies') }}" class="nav-link {{ request()->is('finance/companies') ? 'active' : '' }}">
-                <i class="fas fa-file-invoice-dollar nav-icon"></i>
-                <p>سجلات الشركات المالية</p>
-            </a>
-        </li>
-        
-    </ul>
-</li>
+                {{-- الحسابات المالية: تختفي عن جمال وتظهر للمحاسبين والمديرين --}}
+                @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'accountant', 'محاسب']))
+                <li class="nav-item has-treeview {{ request()->is('finance*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link {{ request()->is('finance*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-calculator text-success"></i>
+                        <p>
+                            الحسابات المالية
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="{{ url('/finance/companies') }}" class="nav-link {{ request()->is('finance/companies') ? 'active' : '' }}">
+                                <i class="fas fa-file-invoice-dollar nav-icon"></i>
+                                <p>سجلات الشركات المالية</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                @endif
 
-<li class="nav-item has-treeview {{ request()->is('assets*') ? 'menu-open' : '' }}">
-    <a href="#" class="nav-link {{ request()->is('assets*') ? 'active' : '' }}">
-        <i class="nav-icon fas fa-boxes text-warning"></i>
-        <p>
-            إدارة الأصول
-            <i class="right fas fa-angle-left"></i>
-        </p>
-    </a>
-    <ul class="nav nav-treeview">
-        
-        <li class="nav-item">
-            <a href="{{ route('assets.index') }}" class="nav-link {{ request()->is('assets') ? 'active' : '' }}">
-                <i class="fas fa-list-ul nav-icon"></i>
-                <p>الأصول النشطة</p>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ route('assets.damaged') }}" class="nav-link {{ request()->is('assets/damaged') ? 'active' : '' }}">
-                <i class="fas fa-dumpster nav-icon"></i>
-                <p>مخزن التوالف</p>
-            </a>
-        </li>
-        <li class="nav-item">
-    <a href="{{ route('assets.maintenance_logs') }}" class="nav-link">
-        <i class="fas fa-tools"></i>
-        <span>سجل الصيانة</span>
-    </a>
-</li>
-<li class="nav-item">
-            <a href="{{ route('assets.dashboard') }}" class="nav-link {{ request()->is('assets/dashboard') ? 'active' : '' }}">
-                <i class="fas fa-chart-pie nav-icon"></i>
-                <p>التقارير والإحصائيات</p>
-            </a>
-        </li>
-        <li class="nav-item border-top">
-            <a href="{{ route('assets.create') }}" class="nav-link {{ request()->is('assets/create') ? 'active' : '' }}">
-                <i class="fas fa-plus-circle nav-icon text-primary"></i>
-                <p class="text-primary font-weight-bold">إضافة أصل جديد</p>
-            </a>
-        </li>
-    </ul>
-</li>
+                {{-- إدارة الأصول: تظهر لـ جمال (asset_entry) وللمديرين --}}
+                @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'technician', 'store_manager', 'asset_entry', 'مدخل بيانات أصول']))
+                <li class="nav-item has-treeview {{ request()->is('assets*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link {{ request()->is('assets*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-boxes text-warning"></i>
+                        <p>
+                            إدارة الأصول
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'technician', 'store_manager', 'asset_entry', 'مدخل بيانات أصول']))
+                        <li class="nav-item">
+                            <a href="{{ route('assets.index') }}" class="nav-link {{ request()->is('assets') ? 'active' : '' }}">
+                                <i class="fas fa-list-ul nav-icon"></i>
+                                <p>الأصول النشطة</p>
+                            </a>
+                        </li>
+                        @endif
+                        @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'مدير',  'store_manager']))
+                        <li class="nav-item">
+                            <a href="{{ route('assets.damaged') }}" class="nav-link {{ request()->is('assets/damaged') ? 'active' : '' }}">
+                                <i class="fas fa-dumpster nav-icon"></i>
+                                <p>مخزن التوالف</p>
+                            </a>
+                        </li>
+                        @endif
+                        @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'مدير', 'technician', ]))
+                        <li class="nav-item">
+                            <a href="{{ route('assets.maintenance_logs') }}" class="nav-link">
+                                <i class="fas fa-tools nav-icon"></i>
+                                <span>سجل الصيانة</span>
+                            </a>
+                        </li>
+                        @endif
+                        @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'مدير',]))
+                        <li class="nav-item">
+                            <a href="{{ route('assets.dashboard') }}" class="nav-link {{ request()->is('assets/dashboard') ? 'active' : '' }}">
+                                <i class="fas fa-chart-pie nav-icon"></i>
+                                <p>التقارير والإحصائيات</p>
+                            </a>
+                        </li>
+                        @endif
+                        @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'مدير', 'asset_entry', 'مدخل بيانات أصول']))
+                        <li class="nav-item border-top">
+                            <a href="{{ route('assets.create') }}" class="nav-link {{ request()->is('assets/create') ? 'active' : '' }}">
+                                <i class="fas fa-plus-circle nav-icon text-primary"></i>
+                                <p class="text-primary font-weight-bold">إضافة أصل جديد</p>
+                            </a>
+                        </li>
+                        @endif
+                    </ul>
+                </li>
+                @endif
 
+                {{-- التقارير: تظهر للمديرين فقط --}}
+                @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'مدير']))
                 <li class="nav-header text-left">التقارير والإحصائيات</li>
-
                 <li class="nav-item">
                     <a href="{{ url('/reports') }}" class="nav-link {{ request()->is('reports*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-chart-line text-danger"></i>
                         <p>لوحة التقارير العامة</p>
                     </a>
                 </li>
+                @endif
 
-                   <li class="nav-item d-none d-sm-inline-block">
-    <a href="#" class="nav-link" data-toggle="modal" data-target="#contactModal">
-        <i class="fas fa-headset ml-3"></i> اتصل بنا
-    </a>
-</li>
+                <li class="nav-item d-none d-sm-inline-block">
+                    <a href="#" class="nav-link" data-toggle="modal" data-target="#contactModal">
+                        <i class="fas fa-headset ml-3"></i> اتصل بنا
+                    </a>
+                </li>
 
-
+                {{-- إدارة الصلاحيات: تظهر للمديرين فقط --}}
+                @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'مدير']))
+                <li class="nav-item">
+                    <a href="{{ route('roles.index') }}" class="nav-link {{ request()->is('manage-roles') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-user-shield"></i> <p>
+                            إدارة الصلاحيات
+                            <span class="badge badge-info right">HRMS</span>
+                        </p>
+                    </a>
+                </li>
+                @endif
             </ul>
         </nav>
     </div>

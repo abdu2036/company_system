@@ -4,7 +4,7 @@ namespace App\Providers;
 
 // use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-
+use Illuminate\Support\Facades\Gate;
 class AuthServiceProvider extends ServiceProvider
 {
     /**
@@ -19,8 +19,13 @@ class AuthServiceProvider extends ServiceProvider
     /**
      * Register any authentication / authorization services.
      */
-    public function boot(): void
-    {
-        //
-    }
+  public function boot()
+{
+    $this->registerPolicies();
+
+    // هذا السطر يمنح الـ Super Admin صلاحية تخطي أي فحص للصلاحيات
+    Gate::before(function ($user, $ability) {
+        return $user->hasRole('super-admin') ? true : null;
+    });
+}
 }

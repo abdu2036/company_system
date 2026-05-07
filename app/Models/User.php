@@ -2,44 +2,49 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles; 
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use Notifiable, HasRoles;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
+    // 1. القاعدة الأساسية يجب أن تكون mysql (التي تحتوي على الصلاحيات)
+    protected $connection = 'mysql'; 
+    protected $table = 'users';
+
+    // 2. تحديد الـ Guard ليتوافق مع جداول Spatie
+    protected $guard_name = 'web';
+
     protected $fillable = [
         'name',
         'email',
         'password',
+        'employee_id', 
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * جلب بيانات الموظف من قاعدة بيانات hrms_db
+     */
+   /**
+ * جلب بيانات الموظف من قاعدة بيانات hrms_db
+ */
+public function employee()
+{
+    // لارافيل سيستخدم الاتصال المحدد داخل موديل Employee تلقائياً
+    return $this->belongsTo(Employee::class, 'employee_id');
+}
+
+    // ملاحظة: لا تضع دالة roles() يدوياً، الـ Trait (HasRoles) سيقوم بالواجب تلقائياً
 }

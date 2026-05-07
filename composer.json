@@ -11,10 +11,11 @@
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
-        "simplesoftwareio/simple-qrcode": "^4.2"
+        "simplesoftwareio/simple-qrcode": "^4.2",
+        "spatie/laravel-permission": "^6.25"
     },
     "require-dev": {
-        "barryvdh/laravel-ide-helper": "*",
+        "barryvdh/laravel-ide-helper": "^3.1",
         "fakerphp/faker": "^1.9.1",
         "laravel/breeze": "^1.29",
         "laravel/pint": "^1.0",
