@@ -71,6 +71,7 @@ public function create()
 
         try {
             // 1. حفظ الشركة الأساسية
+
             $company = Company::create([
                 'name'       => $request->name,
                 'activity'   => $request->activity,

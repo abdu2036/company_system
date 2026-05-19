@@ -80,7 +80,20 @@
                                 <p>عرض سجل المستوردين</p>
                             </a>
                         </li>
-                        
+                        <li class="nav-item">
+    <a href="{{ route('statistical.index') }}" class="nav-link {{ request()->routeIs('statistical.*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-chart-pie text-info"></i>
+        <p>عرض الرمز الإحصائي</p>
+    </a>
+</li>
+
+<li class="nav-item">
+    <a href="{{ route('industrial.index') }}" class="nav-link {{ request()->routeIs('industrial.*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-industry text-info"></i>
+        <p>عرض السجل الصناعي</p>
+    </a>
+</li>
+
                         <li class="nav-item border-top mt-1 shadow-sm">
                             <a href="{{ url('/company-archives') }}" class="nav-link {{ request()->is('company-archives*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-archive text-warning"></i>
@@ -90,6 +103,25 @@
                     </ul>
                 </li>
 
+                                <li class="nav-item has-treeview {{ request()->is('finance*') ? 'menu-open' : '' }}">
+    <a href="#" class="nav-link {{ request()->is('finance*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-calculator text-success"></i>
+        <p>
+            الحسابات المالية
+            <i class="right fas fa-angle-left"></i>
+        </p>
+    </a>
+    <ul class="nav nav-treeview">
+        <li class="nav-item">
+            <a href="{{ url('/finance/companies') }}" class="nav-link {{ request()->is('finance/companies') ? 'active' : '' }}">
+                <i class="fas fa-file-invoice-dollar nav-icon"></i>
+                <p>سجلات الشركات المالية</p>
+            </a>
+        </li>
+        
+    </ul>
+</li>
+
                 <li class="nav-header text-left">التقارير والإحصائيات</li>
 
                 <li class="nav-item">
@@ -98,6 +130,7 @@
                         <p>لوحة التقارير العامة</p>
                     </a>
                 </li>
+
                    <li class="nav-item d-none d-sm-inline-block">
     <a href="#" class="nav-link" data-toggle="modal" data-target="#contactModal">
         <i class="fas fa-headset ml-3"></i> اتصل بنا

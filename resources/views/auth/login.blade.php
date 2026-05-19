@@ -168,12 +168,12 @@
                 <button type="submit" class="btn btn-primary btn-block shadow">تسجيل الدخول</button>
             </form>
 
-            <div class="text-center mt-4">
+          <!--  <div class="text-center mt-4">
                 <p class="mb-0 small">
                     ليس لديك حساب؟
                     <a href="{{ route('register') }}" class="text-primary font-weight-bold">إنشاء حساب جديد</a>
                 </p>
-            </div>
+            </div> -->
 
             <div class="text-center mt-5">
                 <p class="small text-muted">© 2026 جميع الحقوق محفوظة | نظام إدارة الشركات</p>
