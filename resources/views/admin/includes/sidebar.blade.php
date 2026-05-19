@@ -80,7 +80,20 @@
                                 <p>عرض سجل المستوردين</p>
                             </a>
                         </li>
-                        
+                        <li class="nav-item">
+    <a href="{{ route('statistical.index') }}" class="nav-link {{ request()->routeIs('statistical.*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-chart-pie text-info"></i>
+        <p>عرض الرمز الإحصائي</p>
+    </a>
+</li>
+
+<li class="nav-item">
+    <a href="{{ route('industrial.index') }}" class="nav-link {{ request()->routeIs('industrial.*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-industry text-info"></i>
+        <p>عرض السجل الصناعي</p>
+    </a>
+</li>
+
                         <li class="nav-item border-top mt-1 shadow-sm">
                             <a href="{{ url('/company-archives') }}" class="nav-link {{ request()->is('company-archives*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-archive text-warning"></i>

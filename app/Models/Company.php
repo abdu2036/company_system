@@ -58,6 +58,14 @@ public function documents()
     // نربط الشركة بجدول الفواتير (Invoices)
     return $this->hasMany(Invoice::class, 'company_id');
 }
+
+/**
+ * علاقة الشركة بالسجلات الصناعية التابعة لها
+ */
+public function industrialRegisters()
+{
+    return $this->hasMany(IndustrialRegister::class);
+}
     
 }
 

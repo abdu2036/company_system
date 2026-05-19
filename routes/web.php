@@ -2,194 +2,127 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CompanyController; 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChamberController;
 use App\Http\Controllers\LicenseController;
-use App\Http\Controllers\ImporterRecordController; // تأكد من استدعاء الكنترول
+use App\Http\Controllers\ImporterRecordController;
 use App\Http\Controllers\CommercialRegisterController;
-use App\Http\Controllers\CompanyDocumentController; // تأكد من استدعاء الكنترولر الجديد
-use App\Http\Controllers\FinanceController; // تأكد من استدعاء الكنترولر الجديد
-/*
+use App\Http\Controllers\CompanyDocumentController;
+use App\Http\Controllers\FinanceController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\StatisticalRegisterController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\IndustrialRegisterController;
+
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| Web Routes - روابط المنظومة العامة والتحويلات
 |--------------------------------------------------------------------------
 */
-Route::get('/companies/create', [CompanyController::class, 'create'])->name('companies.create');
-// مسار عرض صفحة الإضافة
-Route::get('companies/create-views-companies', [CompanyController::class, 'create'])->name('companies.create');
 
-// مسار حفظ البيانات (الذي تستخدمه في الفورم)
-Route::post('companies/store', [CompanyController::class, 'store'])->name('companies.store');
-// 1. الصفحة الرئيسية والداشبورد
-Route::get('/', function () {
-    return view('welcome');
-});
-// مسار حذف الشركة وكل ما يتعلق بها
-Route::delete('/companies/{id}', [CompanyController::class, 'destroy'])->name('companies.destroy');
-Route::get('/dashboard', function () {
-    return view('admin.dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-
-// 2. مسارات المحمية بتسجيل الدخول
-Route::middleware('auth')->group(function () {
-    
-    // --- مسارات الشركات ---
-    Route::get('/companies', [CompanyController::class, 'index'])->name('companies.index');
-    Route::get('/companies/create', [CompanyController::class, 'create'])->name('companies.create');
-    Route::post('/companies/store', [CompanyController::class, 'store'])->name('companies.store');
-
-    // --- مسارات السجلات التجارية (Commercial Registers) ---
-    // العرض
-Route::middleware(['auth'])->group(function () {
-    
-// 1. أضف مسار التجديد أولاً
-Route::get('commercial-registers/{id}/renew', [CommercialRegisterController::class, 'renew'])->name('commercial-registers.renew');
-
-// 2. ثم سطر الريسورس الأساسي
-
-    // 1. مسارات السجلات التجارية (تعمل تلقائياً مع CommercialRegisterController)
-    Route::resource('commercial-registers', CommercialRegisterController::class);
-
-    // 2. مسارات الشركات
-    Route::resource('companies', CompanyController::class);
-    Route::get('commercial-registers/{id}/renew', [CommercialRegisterController::class, 'renew'])->name('commercial-registers.renew');
-    Route::put('commercial-registers/{id}/update-renew', [CommercialRegisterController::class, 'updateRenew'])->name('commercial-registers.updateRenew');
-    // 2. مسار رفع الملفات المؤقتة (تأكد من كتابة اسم الكنترولر الصحيح هنا)
-    Route::post('/upload-temp', [CommercialRegisterController::class, 'uploadTemp'])->name('upload.temp');
-});
-    // --- مسارات التراخيص والخدمات الأخرى ---
-    Route::get('/licenses', [CompanyController::class, 'showLicenses'])->name('companies.licenses');
-    Route::get('/chambers', [CompanyController::class, 'showChambers'])->name('companies.chambers');
-    Route::get('/importers', [CompanyController::class, 'showImporters'])->name('companies.importers');
-
-    // مسار رفع الملفات المؤقت (AJAX)
-    Route::post('/upload-temp', [CompanyController::class, 'uploadTempFile']);
-
-    // مسارات الملف الشخصي (اختياري إذا كنت تستخدم Breeze)
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    // مسارات الغرفة التجارية (Chamber of Commerce)
-    
-
-});
-Route::middleware('auth')->group(function () {
-    // أضف هذا السطر أولاً
-Route::get('chambers/{id}/renew', [ChamberController::class, 'renew'])->name('chambers.renew');
-
-// ثم سطر الريسورس الموجود عندك
-Route::resource('chambers', ChamberController::class);
-    // ... المسارات الأخرى (مثل الشركات) ...
-
-    // هذا السطر يغنينا عن كتابة كل المسارات يدوياً
-    // وسيبحث تلقائياً عن الدوال بداخل ChamberController
-    Route::resource('chambers', ChamberController::class);
-    Route::get('chambers/{id}/renew', [ChamberController::class, 'renew'])->name('chambers.renew');
-// أضف هذا السطر أيضاً
-Route::put('chambers/{id}/renew-update', [ChamberController::class, 'renewUpdate'])->name('chambers.renewUpdate');
-
-Route::resource('chambers', ChamberController::class);
-    
-});
-//قروب الترخيص 
-Route::middleware('auth')->group(function () {
-    
-    // 1. مسارات إضافية للتجديد (Renew) قبل الريسورس
-    Route::get('licenses/{id}/renew', [LicenseController::class, 'renew'])->name('licenses.renew');
-    Route::put('licenses/{id}/renew-update', [LicenseController::class, 'renewUpdate'])->name('licenses.renewUpdate');
-
-    // 2. مسارات الريسورس الأساسية (index, create, store, edit, update, destroy)
-    Route::resource('licenses', LicenseController::class);
-
-});
-// قروب سجل المستوردين
-Route::middleware(['auth'])->group(function () {
-    // مجموعة مسارات سجل المستوردين
-    Route::resource('importers', ImporterRecordController::class);
-    Route::get('/importers/{id}/renew', [ImporterRecordController::class, 'renew'])->name('importers.renew');
-    // يمكنك إضافة المسارات الأخرى هنا لتكون منظمة معاً
-    // رابط عرض صفحة التجديد
-Route::get('importers/{id}/renew', [ImporterRecordController::class, 'renew'])->name('importers.renew');
-
-// رابط معالجة بيانات التجديد (الذي نستخدمه في الفورم أعلاه)
-Route::put('importers/{id}/renew', [ImporterRecordController::class, 'updateRenew']);
-// في ملف web.php
-Route::put('importers/{id}/renew', [ImporterRecordController::class, 'updateRenew'])->name('importers.update_renew');
-    // Route::resource('licenses', LicenseController::class);
-});
-
-//مسارات لصفحة العرض الرائسية للشركات
-// مسارات السجل التجاري
-Route::get('/commercial-registers/create', [CommercialRegisterController::class, 'create'])->name('commercial-registers.create');
-
-// مسارات التراخيص
-Route::get('/licenses/create', [LicenseController::class, 'create'])->name('licenses.create');
-
-// مسارات الغرفة التجارية
-Route::get('/chambers/create', [ChamberController::class, 'create'])->name('chambers.create');
-
-// مسارات سجل المستوردين
-Route::get('/importers/create', [ImporterRecordController::class, 'create'])->name('importers.create');
-
-// مجموعة المسارات المحمية بـ Auth
-Route::middleware(['auth'])->group(function () {
-
-    // مسارات الشركات الأساسية
-    Route::resource('companies', CompanyController::class);
-
-    // مجموعة مسارات السجل التجاري
-    Route::resource('commercial-registers', CommercialRegisterController::class);
-    
-    // يمكنك إضافة بقية الأقسام هنا مستقبلاً
-    // Route::resource('licenses', LicenseController::class);
-});
-Route::post('/upload-temp', [App\Http\Controllers\LicenseController::class, 'uploadTemp']);
-require __DIR__ . '/auth.php';
-
-//كود الكنترولر الخاص بالتقارير
-Route::get('/reports', [App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
-
-// بدلاً من عرض صفحة welcome، قم بالتحويل لصفحة login
+// بدلاً من عرض صفحة welcome، قم بالتحويل لصفحة login تلقائياً
 Route::get('/', function () {
     return redirect()->route('login')->with('status', 'تم تسجيل الخروج بنجاح. نراك لاحقاً!');
 });
 
-Route::get('/admin/reports', [App\Http\Controllers\ReportController::class, 'index'])
-    ->middleware(['auth'])
-    ->name('reports.index');
+// مسار رفع الملفات المؤقتة العامة (AJAX)
+Route::post('/upload-temp', [CompanyController::class, 'uploadTempFile']);
 
-// مسار عرض الصفحة (الذي يستخدمه السايد بار)
-Route::get('/company-archives', [CompanyDocumentController::class, 'index'])->name('companies.CompanyDocument.index');
-
-// مسار جلب البيانات للـ Modal (عبر AJAX)
-Route::get('/companies/{id}/documents', [CompanyDocumentController::class, 'getCompanyDocuments']);
-
-// مسار الرفع
-Route::post('/companies/{id}/documents/upload', [CompanyDocumentController::class, 'store']);
-
-// مسار الحذف
-Route::delete('/companies/{id}/documents/{documentId}', [CompanyDocumentController::class, 'destroy']);
+require __DIR__ . '/auth.php';
 
 
+/*
+|--------------------------------------------------------------------------
+| Protected Routes - المسارات المحمية بتسجيل الدخول (Auth)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'verified'])->group(function () {
+
+    // 1. لوحة التحكم (Dashboard) والتقرير الرئيسي
+    Route::get('/dashboard', function () {
+        return view('admin.dashboard');
+    })->name('dashboard');
+
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/admin/reports', [ReportController::class, 'index'])->name('admin.reports.index');
 
 
-// مسارات النظام المالي
-Route::prefix('finance')->group(function () {
-    // عرض قائمة الشركات لاختيار واحدة
-    Route::get('/companies', [FinanceController::class, 'index'])->name('finance.index');
-    
-    // عرض صفحة الفاتورة لشركة معينة
-    Route::get('/create/{company_id}', [FinanceController::class, 'create'])->name('finance.create');
-    
-    // حفظ الفاتورة
-    Route::post('/store', [FinanceController::class, 'store'])->name('finance.store');
-    // عرض تفاصيل الفواتير لشركة معينة
-    Route::get('/finance/show/{company_id}', [FinanceController::class, 'show'])->name('finance.show');
+    // 2. مجموعة مسارات "الرمز الإحصائي الجديد" (يجب أن تظل في الأعلى)
+    Route::get('companies/statistical/create', [StatisticalRegisterController::class, 'create'])->name('statistical.create');
+    Route::post('companies/statistical/store', [StatisticalRegisterController::class, 'store'])->name('statistical.store');
+    Route::get('companies/statistical', [StatisticalRegisterController::class, 'index'])->name('statistical.index');
+    Route::get('companies/statistical/{id}/edit', [StatisticalRegisterController::class, 'edit'])->name('statistical.edit');
+    Route::put('companies/statistical/{id}/update', [StatisticalRegisterController::class, 'update'])->name('statistical.update');
+    Route::get('companies/statistical/{id}/renew', [StatisticalRegisterController::class, 'renew'])->name('statistical.renew');
+    Route::post('companies/statistical/{id}/renew', [StatisticalRegisterController::class, 'processRenew'])->name('statistical.processRenew');
+    Route::delete('companies/statistical/{id}', [StatisticalRegisterController::class, 'destroy'])->name('statistical.destroy');
 
-    // مسار تحديث الدفعة المالية (التسوية)
-Route::post('/finance/update-payment/{id}', [App\Http\Controllers\FinanceController::class, 'updatePayment'])->name('finance.update_payment');
-// مسار طباعة الفاتورة
-Route::get('/finance/print/{id}', [App\Http\Controllers\FinanceController::class, 'printInvoice'])->name('finance.print');
+// 3. مجموعة مسارات "السجل الصناعي" (تم نقلها هنا للأعلى لمنع التداخل مع الـ Resource)
+    Route::get('companies/industrial/create', [IndustrialRegisterController::class, 'create'])->name('industrial.create');
+    Route::post('companies/industrial/store', [IndustrialRegisterController::class, 'store'])->name('industrial.store');
+    Route::get('companies/industrial', [IndustrialRegisterController::class, 'index'])->name('industrial.index');
+    Route::get('companies/industrial/{id}/edit', [IndustrialRegisterController::class, 'edit'])->name('industrial.edit');
+    Route::put('companies/industrial/{id}/update', [IndustrialRegisterController::class, 'update'])->name('industrial.update');
+    Route::get('companies/industrial/{id}/renew', [IndustrialRegisterController::class, 'renew'])->name('industrial.renew');
+    Route::post('companies/industrial/{id}/renew', [IndustrialRegisterController::class, 'processRenew'])->name('industrial.processRenew');
+    Route::delete('companies/industrial/{id}', [IndustrialRegisterController::class, 'destroy'])->name('industrial.destroy');
+    // 3. مسارات إضافية لإنشاء السجلات الفرعية (تمنع التداخل)
+    Route::get('/commercial-registers/create', [CommercialRegisterController::class, 'create'])->name('commercial-registers.create');
+    Route::get('/licenses/create', [LicenseController::class, 'create'])->name('licenses.create');
+    Route::get('/chambers/create', [ChamberController::class, 'create'])->name('chambers.create');
+    Route::get('/importers/create', [ImporterRecordController::class, 'create'])->name('importers.create');
+
+
+    // 4. مسارات التجديد (Renew) للسجلات الأخرى (توضع قبل الـ Resource الخاص بها)
+    Route::get('commercial-registers/{id}/renew', [CommercialRegisterController::class, 'renew'])->name('commercial-registers.renew');
+    Route::put('commercial-registers/{id}/update-renew', [CommercialRegisterController::class, 'updateRenew'])->name('commercial-registers.updateRenew');
+
+    Route::get('chambers/{id}/renew', [ChamberController::class, 'renew'])->name('chambers.renew');
+    Route::put('chambers/{id}/renew-update', [ChamberController::class, 'renewUpdate'])->name('chambers.renewUpdate');
+
+    Route::get('licenses/{id}/renew', [LicenseController::class, 'renew'])->name('licenses.renew');
+    Route::put('licenses/{id}/renew-update', [LicenseController::class, 'renewUpdate'])->name('licenses.renewUpdate');
+
+    Route::get('importers/{id}/renew', [ImporterRecordController::class, 'renew'])->name('importers.renew');
+    Route::put('importers/{id}/renew', [ImporterRecordController::class, 'updateRenew'])->name('importers.update_renew');
+
+
+    // 5. روابط الـ Resource الأساسية للنظام بالكامل (مجمعة ومنظفة بدون تكرار)
+    Route::resource('companies', CompanyController::class);
+    Route::resource('commercial-registers', CommercialRegisterController::class);
+    Route::resource('chambers', ChamberController::class);
+    Route::resource('licenses', LicenseController::class);
+    Route::resource('importers', ImporterRecordController::class);
+
+
+    // 6. مسارات الخدمات الإضافية داخل الكومباني (الربط القديم)
+    Route::get('/licenses-list', [CompanyController::class, 'showLicenses'])->name('companies.licenses');
+    Route::get('/chambers-list', [CompanyController::class, 'showChambers'])->name('companies.chambers');
+    Route::get('/importers-list', [CompanyController::class, 'showImporters'])->name('companies.importers');
+
+
+    // 7. أرشيف مستندات الشركة (Company Documents)
+    Route::get('/company-archives', [CompanyDocumentController::class, 'index'])->name('companies.CompanyDocument.index');
+    Route::get('/companies/{id}/documents', [CompanyDocumentController::class, 'getCompanyDocuments']);
+    Route::post('/companies/{id}/documents/upload', [CompanyDocumentController::class, 'store']);
+    Route::delete('/companies/{id}/documents/{documentId}', [CompanyDocumentController::class, 'destroy']);
+
+
+    // 8. مسارات النظام المالي للشركات (Finance)
+    Route::prefix('finance')->group(function () {
+        Route::get('/companies', [FinanceController::class, 'index'])->name('finance.index');
+        Route::get('/create/{company_id}', [FinanceController::class, 'create'])->name('finance.create');
+        Route::post('/store', [FinanceController::class, 'store'])->name('finance.store');
+        Route::get('/show/{company_id}', [FinanceController::class, 'show'])->name('finance.show');
+        Route::post('/update-payment/{id}', [FinanceController::class, 'updatePayment'])->name('finance.update_payment');
+        Route::get('/print/{id}', [FinanceController::class, 'printInvoice'])->name('finance.print');
+    });
+
+
+    // 9. مسارات الملف الشخصي للموظفين (Profile)
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+
+ 
 });
