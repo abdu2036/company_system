@@ -2,38 +2,52 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-  public function run()
-{
-    // 1. إعادة ضبط الكاش
-    app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+    public function run()
+    {
+        // 1. إعادة ضبط كاش الصلاحيات (ضروري جداً لكي يشعر النظام بالتغييرات)
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-    // 2. إنشاء الصلاحيات (Permissions)
-    Permission::firstOrCreate(['name' => 'view assets']);
-    Permission::firstOrCreate(['name' => 'manage reports']);
-    Permission::firstOrCreate(['name' => 'manage finance']);
+        // 2. قائمة بجميع الصلاحيات التي يطلبها الـ Blade في مشروعك
+        $permissions = [
+            'view assets',
+            'edit assets',
+            'delete assets',
+            'send store',
+            'manage maintenance',
+            'view reports',
+            'manage finance',
+            'manage reports'
+        ];
 
-    // 3. ربط الصلاحيات بالأدوار الموجودة عندك في الصورة
-    
-    // دور الفني (technician)
-    $tech = Role::where('name', 'technician')->first();
-    $tech->givePermissionTo('view assets');
+        // إنشاء الصلاحيات إذا لم تكن موجودة (استخدام guard_name يضمن التوافق)
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+        }
 
-    // دور مدخل البيانات (asset_entry)
-    $entry = Role::where('name', 'asset_entry')->first();
-    $entry->givePermissionTo('view assets');
+        // 3. إنشاء أو جلب الأدوار (Roles) وربطها بالصلاحيات
+        
+        // دور الفني (technician)
+      // الخطأ كان هنا: ['name' => 'technician','send store', ...]
+$tech = Role::firstOrCreate(['name' => 'technician', 'guard_name' => 'web']);
+$tech->syncPermissions(['view assets', 'manage maintenance', 'send store']); // أضف send store هنا
 
-    // دور المدير (admin)
-    $admin = Role::where('name', 'admin')->first();
-    $admin->givePermissionTo(Permission::all());
-}
+        // دور مدخل البيانات (asset_entry)
+        $entry = Role::firstOrCreate(['name' => 'asset_entry', 'guard_name' => 'web']);
+        $entry->syncPermissions(['view assets', 'edit assets']);
+
+        // دور المدير (admin) - نعطيه كل الصلاحيات
+        $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $admin->syncPermissions(Permission::all());
+        
+        // دور الـ Super Admin
+        $superAdmin = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
+        $superAdmin->syncPermissions(Permission::all());
+    }
 }

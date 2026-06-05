@@ -3,7 +3,7 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4 no-print">
-        <h2 class="h4">سجل صيانة الأصول الشامل</h2>
+        <h2 class="h4"></h2>
         <div>
             <button onclick="window.print()" class="btn btn-success btn-sm ml-2">
                 <i class="fas fa-print"></i> طباعة التقرير

@@ -98,7 +98,32 @@
         </div>
     </div>
 </div>
-
+<div class="modal fade" id="addRoleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="exampleModalLabel text-white">إضافة دور (Role) جديد</h5>
+                <button class="close text-white" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <form action="{{ route('roles.store_role') }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="font-weight-bold">اسم الدور (بالإنجليزي):</label>
+                        <input type="text" name="role_name" class="form-control" placeholder="مثال: manager, supervisor" required>
+                        <small class="text-muted">هذا الاسم سيظهر في مصفوفة الصلاحيات.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">إلغاء</button>
+                    <button class="btn btn-primary" type="submit">حفظ الدور الجديد</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <style>
     .avatar-circle { height: 35px; width: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
     .custom-switch-lg .custom-control-label::before { height: 1.5rem; width: 2.75rem; border-radius: 1rem; }
@@ -144,4 +169,5 @@
         });
     });
 </script>
+
 @endsection

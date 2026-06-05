@@ -32,7 +32,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     // 2. التقارير (Admin فقط)
-    Route::get('/admin/reports', [ReportController::class, 'index'])
+    Route::get('/reports', [ReportController::class, 'index'])
         ->middleware('role:admin')
         ->name('reports.index');
 
@@ -129,3 +129,5 @@ Route::post('/companies/{id}/documents/upload', [CompanyDocumentController::clas
 // 4. حذف ملف (Destroy)
 Route::delete('/companies/{companyId}/documents/{documentId}', [CompanyDocumentController::class, 'destroy'])
     ->name('companies.documents.destroy');
+
+    Route::post('/roles/store-role', [RoleController::class, 'storeRole'])->name('roles.store_role');

@@ -19,13 +19,14 @@ class AuthServiceProvider extends ServiceProvider
     /**
      * Register any authentication / authorization services.
      */
-  public function boot()
+
+public function boot()
 {
     $this->registerPolicies();
 
-    // هذا السطر يمنح الـ Super Admin صلاحية تخطي أي فحص للصلاحيات
+    // هذا السطر يجعل السوبر أدمن يتخطى كل فحوصات الصلاحيات ويفتح له كل شيء
     Gate::before(function ($user, $ability) {
-        return $user->hasRole('super-admin') ? true : null;
+        return $user->hasRole('super-admin', 'admin') ? true : null;
     });
 }
 }

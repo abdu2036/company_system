@@ -20,13 +20,13 @@
 
     <div class="sidebar">
         @auth
-        {{-- جلب دور المستخدم الحالي يدوياً لضمان الدقة في حالة جمال --}}
+        {{-- تعديل جوهري: جلب جميع أدوار المستخدم لضمان عمل الصلاحيات بشكل صحيح --}}
         @php
-            $userRoleInCompany = \Illuminate\Support\Facades\DB::table('model_has_roles')
+            $userRolesArray = \Illuminate\Support\Facades\DB::table('model_has_roles')
                 ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-                ->join('users', 'users.id', '=', 'model_has_roles.model_id')
-                ->where('users.email', auth()->user()->email)
-                ->value('roles.name');
+                ->where('model_has_roles.model_id', auth()->user()->id)
+                ->pluck('roles.name')
+                ->toArray();
         @endphp
 
         <div class="user-panel mt-3 pb-3 mb-3 d-flex border-bottom" style="border-color: #4b545c !important;">
@@ -56,8 +56,8 @@
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                 
-                {{-- قسم الشركات: يختفي عن جمال ويظهر للمديرين --}}
-                @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'مدير']))
+                {{-- قسم الشركات --}}
+                @if(count(array_intersect($userRolesArray, ['admin', 'super-admin', 'مدير'])) > 0)
                 <li class="nav-item has-treeview {{ request()->is('companies*', 'commercial-registers*', 'licenses*', 'chambers*', 'importers*', 'company-archives*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link {{ request()->is('companies*', 'commercial-registers*', 'licenses*', 'chambers*', 'importers*', 'company-archives*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-tasks text-info"></i>
@@ -114,8 +114,8 @@
                 </li>
                 @endif
 
-                {{-- الحسابات المالية: تختفي عن جمال وتظهر للمحاسبين والمديرين --}}
-                @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'accountant', 'محاسب']))
+                {{-- الحسابات المالية --}}
+                @if(count(array_intersect($userRolesArray, ['admin', 'super-admin', 'accountant', 'محاسب'])) > 0)
                 <li class="nav-item has-treeview {{ request()->is('finance*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link {{ request()->is('finance*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-calculator text-success"></i>
@@ -135,8 +135,8 @@
                 </li>
                 @endif
 
-                {{-- إدارة الأصول: تظهر لـ جمال (asset_entry) وللمديرين --}}
-                @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'technician', 'store_manager', 'asset_entry', 'مدخل بيانات أصول']))
+                {{-- إدارة الأصول --}}
+                @if(count(array_intersect($userRolesArray, ['admin', 'super-admin', 'technician', 'store_manager', 'asset_entry', 'مدخل بيانات أصول'])) > 0)
                 <li class="nav-item has-treeview {{ request()->is('assets*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link {{ request()->is('assets*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-boxes text-warning"></i>
@@ -146,15 +146,13 @@
                         </p>
                     </a>
                     <ul class="nav nav-treeview">
-                        @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'technician', 'store_manager', 'asset_entry', 'مدخل بيانات أصول']))
                         <li class="nav-item">
                             <a href="{{ route('assets.index') }}" class="nav-link {{ request()->is('assets') ? 'active' : '' }}">
                                 <i class="fas fa-list-ul nav-icon"></i>
                                 <p>الأصول النشطة</p>
                             </a>
                         </li>
-                        @endif
-                        @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'مدير',  'store_manager']))
+                        @if(count(array_intersect($userRolesArray, ['admin', 'super-admin', 'مدير', 'store_manager'])) > 0)
                         <li class="nav-item">
                             <a href="{{ route('assets.damaged') }}" class="nav-link {{ request()->is('assets/damaged') ? 'active' : '' }}">
                                 <i class="fas fa-dumpster nav-icon"></i>
@@ -162,15 +160,13 @@
                             </a>
                         </li>
                         @endif
-                        @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'مدير', 'technician', ]))
                         <li class="nav-item">
                             <a href="{{ route('assets.maintenance_logs') }}" class="nav-link">
                                 <i class="fas fa-tools nav-icon"></i>
                                 <span>سجل الصيانة</span>
                             </a>
                         </li>
-                        @endif
-                        @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'مدير',]))
+                        @if(count(array_intersect($userRolesArray, ['admin', 'super-admin', 'مدير'])) > 0)
                         <li class="nav-item">
                             <a href="{{ route('assets.dashboard') }}" class="nav-link {{ request()->is('assets/dashboard') ? 'active' : '' }}">
                                 <i class="fas fa-chart-pie nav-icon"></i>
@@ -178,20 +174,18 @@
                             </a>
                         </li>
                         @endif
-                        @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'مدير', 'asset_entry', 'مدخل بيانات أصول']))
                         <li class="nav-item border-top">
                             <a href="{{ route('assets.create') }}" class="nav-link {{ request()->is('assets/create') ? 'active' : '' }}">
                                 <i class="fas fa-plus-circle nav-icon text-primary"></i>
                                 <p class="text-primary font-weight-bold">إضافة أصل جديد</p>
                             </a>
                         </li>
-                        @endif
                     </ul>
                 </li>
                 @endif
 
-                {{-- التقارير: تظهر للمديرين فقط --}}
-                @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'مدير']))
+                {{-- التقارير --}}
+                @if(count(array_intersect($userRolesArray, ['admin', 'super-admin', 'مدير'])) > 0)
                 <li class="nav-header text-left">التقارير والإحصائيات</li>
                 <li class="nav-item">
                     <a href="{{ url('/reports') }}" class="nav-link {{ request()->is('reports*') ? 'active' : '' }}">
@@ -207,8 +201,8 @@
                     </a>
                 </li>
 
-                {{-- إدارة الصلاحيات: تظهر للمديرين فقط --}}
-                @if(in_array($userRoleInCompany, ['admin', 'super-admin', 'مدير']))
+                {{-- إدارة الصلاحيات --}}
+                @if(count(array_intersect($userRolesArray, ['admin', 'super-admin', 'مدير'])) > 0)
                 <li class="nav-item">
                     <a href="{{ route('roles.index') }}" class="nav-link {{ request()->is('manage-roles') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-user-shield"></i> <p>
