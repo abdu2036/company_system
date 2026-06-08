@@ -1,173 +1,267 @@
 @extends('layouts.admin')
-@section('title', 'إدارة الأدوار والصلاحيات المتقدمة')
+
+@section('title', 'إدارة الأدوار والصلاحيات')
+
+@section('content_header')
+    <div class="container-fluid font-arabic">
+        <div class="row mb-2">
+            <div class="col-sm-6 text-right">
+                <h1 class="m-0 text-dark">إدارة الأدوار وبنية الصلاحيات</h1>
+            </div>
+        </div>
+    </div>
+@stop
 
 @section('content')
-<meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- الرسائل التنبيهية للعمليات --}}
+    @if(session('success'))
+        <div class="alert alert-success text-right shadow-sm alert-dismissible fade show font-arabic" role="alert">
+            <i class="fas fa-check-circle ml-2"></i> {{ session('success') }}
+            <button type="button" class="close ml-0 mr-auto" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
 
-<div class="container-fluid py-4">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800 font-weight-bold">
-            <i class="fas fa-shield-alt text-primary mr-2"></i> منظومة التحكم بالصلاحيات
-        </h1>
-        <button type="button" class="btn btn-primary btn-sm shadow-sm px-4" data-toggle="modal" data-target="#addRoleModal">
-            <i class="fas fa-plus-circle fa-sm text-white-50 mr-1"></i> إضافة دور جديد
-        </button>
-    </div>
+    @if(session('error'))
+        <div class="alert alert-danger text-right shadow-sm alert-dismissible fade show font-arabic" role="alert">
+            <i class="fas fa-exclamation-circle ml-2"></i> {{ session('error') }}
+            <button type="button" class="close ml-0 mr-auto" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
 
-    <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
-
-    <div class="row">
-        <div class="col-xl-5 col-lg-6">
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-white py-3"><h6 class="m-0 font-weight-bold text-primary">تخصيص الأدوار</h6></div>
+    <div class="row font-arabic">
+        {{-- قسم إدارة الأدوار والصلاحيات (الجانب الأيمن - مساحة أكبر) --}}
+        <div class="col-lg-8 col-md-12">
+            <div class="card card-outline card-primary shadow-sm text-right">
+                <div class="card-header border-0">
+                    <h3 class="card-title float-right">
+                        <i class="fas fa-shield-alt ml-1 text-primary"></i> قائمة الأدوار والمسميات الوظيفية المسجلة
+                    </h3>
+                    <div class="card-tools float-left">
+                        <a href="{{ route('roles.create') }}" class="btn btn-primary btn-sm shadow-sm font-weight-bold">
+                            <i class="fas fa-plus ml-1"></i> إضافة دور جديد
+                        </a>
+                    </div>
+                </div>
+                
                 <div class="card-body p-0">
-                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                        <table class="table align-items-center table-flush">
-                            <thead class="thead-light sticky-top">
-                                <tr><th>الموظف</th><th>الدور المسند</th></tr>
-                            </thead>
-                            <tbody>
-                                @foreach($users as $user)
+                    <table class="table table-hover table-striped mb-0">
+                        <thead class="bg-navy">
+                            <tr>
+                                <th style="width: 50px" class="text-center">#</th>
+                                <th>اسم الدور الوظيفي</th>
+                                <th>الصلاحيات الممنوحة</th>
+                                <th class="text-center" style="width: 120px">العمليات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($roles as $role)
                                 <tr>
+                                    <td class="text-center font-weight-bold text-secondary">{{ sprintf('%02d', $loop->iteration) }}</td>
                                     <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar-circle mr-2 bg-primary text-white">{{ Str::limit($user->name, 1, '') }}</div>
-                                            <div class="small font-weight-bold">{{ $user->name }}</div>
+                                        <span class="badge badge-info p-2" style="font-size: 12px; font-weight: 600;">
+                                            @if($role->name == 'admin' || $role->name == 'super-admin')
+                                                المدير العام 🛡️
+                                            @elseif(Lang::has('permissions.' . $role->name))
+                                                {{ __('permissions.' . $role->name) }}
+                                            @else
+                                                {{ $role->name }}
+                                            @endif
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @forelse($role->permissions as $permission)
+                                            <span class="badge badge-light border ml-1 mb-1 p-1" style="font-size: 11px;">
+                                                <i class="fas fa-tag text-primary ml-1"></i> 
+                                                @if(Lang::has('permissions.' . $permission->name))
+                                                    {{ __('permissions.' . $permission->name) }}
+                                                @elseif(Lang::has('permissions.permissions.' . $permission->name))
+                                                    {{ __('permissions.permissions.' . $permission->name) }}
+                                                @else
+                                                    {{-- حل برمي مخصص للمسافات والنقاط --}}
+                                                    {{ __('permissions.' . str_replace(' ', '_', $permission->name)) != 'permissions.' . str_replace(' ', '_', $permission->name) ? __('permissions.' . str_replace(' ', '_', $permission->name)) : $permission->name }}
+                                                @endif
+                                            </span>
+                                        @empty
+                                            <small class="text-muted">لا توجد صلاحيات مخصصة</small>
+                                        @endforelse
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group">
+                                            <a href="{{ route('roles.edit', $role->id) }}" class="btn btn-xs btn-outline-info mx-1" title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form id="delete-form-{{ $role->id }}" action="{{ route('roles.destroy', $role->id) }}" method="POST" class="d-inline">
+                                                @csrf @method('DELETE')
+                                                <button type="button" onclick="confirmDelete({{ $role->id }}, '{{ $role->name }}')" class="btn btn-xs btn-outline-danger mx-1" title="حذف">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
                                         </div>
                                     </td>
-                                    <td>
-                                        <form action="{{ route('roles.update', $user->id) }}" method="POST" id="form-user-{{ $user->id }}">
-                                            @csrf
-                                            <select name="role" class="form-control form-control-sm select-role" 
-                                                    onchange="if(confirm('تغيير دور الموظف؟')) { this.form.submit(); } else { this.value='{{ $user->getRoleNames()->first() }}'; }">
-                                                @foreach($roles as $role)
-                                                    <option value="{{ $role->name }}" {{ $user->hasRole($role->name) ? 'selected' : '' }}>{{ $role->name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </form>
-                                    </td>
                                 </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-7 col-lg-6">
-            <div class="card shadow-sm border-0 mb-4 border-left-success">
-                <div class="card-header bg-white py-3">
-                    <h6 class="m-0 font-weight-bold text-success">مصفوفة الصلاحيات (تحديث فوري)</h6>
+        {{-- قسم الموظفين المبسط (الجانب الأيسر) --}}
+        <div class="col-lg-4 col-md-12">
+            <div class="card card-outline card-success shadow-sm text-right">
+                <div class="card-header border-0">
+                    <h3 class="card-title float-right text-success font-weight-bold">
+                        <i class="fas fa-users ml-1"></i> موظفو نظام HRMS
+                    </h3>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead class="bg-light text-center">
-                                <tr><th class="text-right">نوع الصلاحية</th>@foreach($roles as $role)<th>{{ $role->name }}</th>@endforeach</tr>
-                            </thead>
-                            <tbody>
-                                @foreach([
-                                    'edit assets' => ['name' => 'تعديل الأصول', 'icon' => 'fa-edit', 'color' => 'text-primary'],
-                                    'delete assets' => ['name' => 'حذف الأصول', 'icon' => 'fa-trash-alt', 'color' => 'text-danger'],
-                                    'manage maintenance' => ['name' => 'الصيانة', 'icon' => 'fa-tools', 'color' => 'text-warning'],
-                                    'view reports' => ['name' => 'التقارير', 'icon' => 'fa-file-pdf', 'color' => 'text-info']
-                                ] as $permKey => $permData)
-                                <tr>
-                                    <td class="text-right py-3">
-                                        <i class="fas {{ $permData['icon'] }} {{ $permData['color'] }} mr-2"></i> {{ $permData['name'] }}
-                                    </td>
-                                    @foreach($roles as $role)
-                                    <td class="text-center align-middle">
-                                        <div class="custom-control custom-switch custom-switch-lg">
-                                            <input type="checkbox" class="custom-control-input permission-switch" 
-                                                   id="sw-{{ $role->id }}-{{ $loop->parent->index }}"
-                                                   data-role="{{ $role->id }}" data-permission="{{ $permKey }}"
-                                                   {{ $role->hasPermissionTo($permKey) ? 'checked' : '' }}>
-                                            <label class="custom-control-label cursor-pointer" for="sw-{{ $role->id }}-{{ $loop->parent->index }}"></label>
-                                        </div>
-                                    </td>
-                                    @endforeach
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                
+                <div class="card-body p-0" style="max-height: 520px; overflow-y: auto;">
+                    <ul class="list-group list-group-flush pr-0">
+                        @forelse ($users as $user)
+                            <li class="list-group-item d-flex justify-content-between align-items-center p-3 table-hover">
+                                <div class="text-right">
+                                    <h6 class="mb-0 font-weight-bold text-dark">{{ $user->name }}</h6>
+                                    <small class="text-muted">{{ $user->email }}</small>
+                                    <div class="mt-1">
+                                        @if($user->current_role)
+                                            <span class="badge badge-primary p-1" style="font-size: 10px;">
+                                                <i class="fas fa-user-shield ml-1"></i> 
+                                                {{ ($user->current_role == 'admin' || $user->current_role == 'super-admin') ? 'المدير العام' : (Lang::has('permissions.' . $user->current_role) ? __('permissions.' . $user->current_role) : $user->current_role) }}
+                                            </span>
+                                        @else
+                                            <span class="badge badge-secondary p-1 text-muted" style="font-size: 10px;">
+                                                <i class="fas fa-user-times ml-1"></i> بدون دور حالياً
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <button type="button" 
+                                        class="btn btn-sm btn-success shadow-sm" 
+                                        data-toggle="modal" 
+                                        data-target="#assignRoleModal"
+                                        data-user-id="{{ $user->id }}"
+                                        data-user-name="{{ $user->name }}"
+                                        data-current-role="{{ $user->current_role }}"
+                                        title="إسناد / تغيير الدور">
+                                    <i class="fas fa-user-cog"></i> تعيين
+                                </button>
+                            </li>
+                        @empty
+                            <div class="text-center p-4 text-muted">
+                                <i class="fas fa-info-circle ml-1"></i> لا توجد بيانات موظفين قادمة.
+                            </div>
+                        @endforelse
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
-</div>
-<div class="modal fade" id="addRoleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="exampleModalLabel text-white">إضافة دور (Role) جديد</h5>
-                <button class="close text-white" type="button" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">×</span>
-                </button>
-            </div>
-            <form action="{{ route('roles.store_role') }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="font-weight-bold">اسم الدور (بالإنجليزي):</label>
-                        <input type="text" name="role_name" class="form-control" placeholder="مثال: manager, supervisor" required>
-                        <small class="text-muted">هذا الاسم سيظهر في مصفوفة الصلاحيات.</small>
+
+    {{-- النافذة المنبثقة (Modal) --}}
+    <div class="modal fade font-arabic" id="assignRoleModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="assignRoleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-success text-white border-0 d-flex flex-row-reverse justify-content-between">
+                    <h5 class="modal-title font-weight-bold" id="assignRoleModalLabel">
+                        <i class="fas fa-user-shield ml-2"></i> تعديل الدور الوظيفي للموظف
+                    </h5>
+                    <button type="button" class="close text-white m-0 p-0 header-close-btn" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="assignRoleForm" method="POST" action="">
+                    @csrf
+                    <div class="modal-body text-right p-4">
+                        <div class="form-group mb-3 bg-light p-3 rounded border">
+                            <label class="text-muted mb-1 d-block" style="font-size: 13px;">اسم الموظف المستهدف</label>
+                            <h5 id="modalUserName" class="font-weight-bold text-dark mb-0">--</h5>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="modalRoleSelect" class="font-weight-bold text-secondary mb-2">اختر المسمى الوظيفي الجديد داخل الشركات:</label>
+                            <select name="role" id="modalRoleSelect" class="form-control text-right shadow-sm" required style="height: 42px;">
+                                <option value="">-- اختر المسمى الوظيفي --</option>
+                                @foreach($roles as $role)
+                                    <option value="{{ $role->name }}">
+                                        {{ ($role->name == 'admin' || $role->name == 'super-admin') ? 'المدير العام 🛡️' : (Lang::has('permissions.' . $role->name) ? __('permissions.' . $role->name) : $role->name) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">إلغاء</button>
-                    <button class="btn btn-primary" type="submit">حفظ الدور الجديد</button>
-                </div>
-            </form>
+                    <div class="modal-footer bg-light border-0 d-flex justify-content-start">
+                        <button type="submit" class="btn btn-success px-4 font-weight-bold shadow-sm">
+                            <i class="fas fa-save ml-1"></i> حفظ وتحديث الربط
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary px-3" data-dismiss="modal">إلغاء الأمر</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
-<style>
-    .avatar-circle { height: 35px; width: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
-    .custom-switch-lg .custom-control-label::before { height: 1.5rem; width: 2.75rem; border-radius: 1rem; }
-    .custom-switch-lg .custom-control-label::after { width: calc(1.5rem - 4px); height: calc(1.5rem - 4px); }
-    .custom-switch-lg .custom-control-input:checked ~ .custom-control-label::after { transform: translateX(1.25rem); }
-</style>
+@stop
 
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script>
-    // تهيئة Axios للتعامل مع CSRF
-    axios.defaults.headers.common['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+@section('css')
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+        .font-arabic { font-family: 'Cairo', sans-serif !important; text-align: right !important; }
+        .table th, .table td { vertical-align: middle !important; }
+        .bg-navy { background-color: #001f3f !important; color: #fff; }
+        .header-close-btn { font-size: 1.5rem; line-height: 1; }
+        .card-body::-webkit-scrollbar { width: 5px; }
+        .card-body::-webkit-scrollbar-track { background: #f1f1f1; }
+        .card-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+@stop
 
-    // نظام التنبيهات (Toast)
-    function showToast(message, type = 'success') {
-        const toast = document.createElement('div');
-        toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} shadow-sm`;
-        toast.style.marginBottom = '10px';
-        toast.innerText = message;
-        const container = document.getElementById('toast-container');
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
+@section('js')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $('#assignRoleModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); 
+            var userId = button.data('user-id'); 
+            var userName = button.data('user-name'); 
+            var currentRole = button.data('current-role'); 
 
-    document.querySelectorAll('.permission-switch').forEach(item => {
-        item.addEventListener('change', function() {
-            const row = this.closest('tr');
-            row.style.opacity = '0.5';
+            var modal = $(this);
+            modal.find('#modalUserName').text(userName); 
+            modal.find('#modalRoleSelect').val(currentRole); 
 
-            axios.post("{{ route('roles.update_permission') }}", {
-                role_id: this.dataset.role,
-                permission: this.dataset.permission,
-                status: this.checked
-            })
-            .then(res => {
-                row.style.opacity = '1';
-                showToast('تم تحديث الصلاحية بنجاح');
-            })
-            .catch(err => {
-                row.style.opacity = '1';
-                this.checked = !this.checked; // عكس الحركة
-                showToast('حدث خطأ، يرجى المحاولة لاحقاً', 'danger');
-            });
+            var actionUrl = "{{ route('roles.update_employee', ':id') }}";
+            actionUrl = actionUrl.replace(':id', userId);
+            modal.find('#assignRoleForm').attr('action', actionUrl);
         });
-    });
-</script>
 
-@endsection
+        function confirmDelete(id, roleName) {
+            if (roleName === 'admin' || roleName === 'super-admin') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'محظور!',
+                    text: 'لا يمكن حذف دور المدير العام لحماية استقرار النظام الأساسي.',
+                    confirmButtonText: 'موافق'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'هل أنت متأكد من الحذف؟',
+                text: "سيتم حذف هذا الدور بالكامل، والموظفون المرتبطون به سيفقدون صلاحياتهم!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'نعم، قم بالحذف!',
+                cancelButtonText: 'إلغاء',
+                direction: 'rtl'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('delete-form-' + id).submit();
+                }
+            });
+        }
+    </script>
+@stop

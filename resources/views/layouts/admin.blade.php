@@ -147,6 +147,32 @@ function confirmLogout() {
     }
 }
 </script>
+{{-- كود استقبال رسائل الفلاش وتحويلها إلى تنبيهات Toastr أنيقة --}}
+@if(session('error'))
+    <script>
+        $(document).ready(function() {
+            toastr.error("{{ session('error') }}", "تنبيه النظام", {
+                positionClass: "toast-top-left", // ليتناسب مع الواجهة العربية
+                rtl: true,
+                timeOut: 5000,
+                closeButton: true
+            });
+        });
+    </script>
+@endif
+
+@if(session('success'))
+    <script>
+        $(document).ready(function() {
+            toastr.success("{{ session('success') }}", "عملية ناجحة", {
+                positionClass: "toast-top-left",
+                rtl: true,
+                timeOut: 4000,
+                closeButton: true
+            });
+        });
+    </script>
+@endif
 @yield('js') 
 <div class="modal fade" id="contactModal" tabindex="-1" role="dialog" aria-labelledby="contactModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">

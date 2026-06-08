@@ -2,177 +2,237 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User; // القادم من mysql_hrms
-use Spatie\Permission\Models\Role; // القادم من mysql (الشركات)
+use App\Models\User; 
+use Spatie\Permission\Models\Role; 
+use Spatie\Permission\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
-use Spatie\Permission\Models\Permission;
-
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Lang;
 
 class RoleAssignmentController extends Controller
 {
-public function index()
-{
-    // 1. جلب كل المستخدمين من HRMS
-    $users = \App\Models\User::all();
+    /**
+     * 1. دالة العرض الرئيسية (تجمع بين الأدوار الحالية وموظفي نظام الـ HR حياً)
+     */
+    public function index()
+    {
+        // جلب الموظفين القادمين من قاعدة بيانات منظومة الموظفين (الاتصال الافتراضي للمشروع)
+        $users = \App\Models\User::all();
 
-    // 2. التصحيح: استخدم get() بدلاً من all() عند استخدام on()
-    $roles = \Spatie\Permission\Models\Role::on('mysql')->get(); 
+        // جلب الأدوار مع صلاحياتها المسجلة على قاعدة بيانات الشركات (اتصال mysql المعين لـ Spatie)
+        $roles = \Spatie\Permission\Models\Role::on('mysql')->with('permissions')->get(); 
 
-    // 3. ربط الأدوار المحقونة بكل موظف للعرض
- // داخل دالة index في RoleAssignmentController
-foreach ($users as $user) {
-    // 1. ابحث عن الموظف في قاعدة بيانات "الشركات" باستخدام بريده الإلكتروني
-    $localUserInCompanyDB = \Illuminate\Support\Facades\DB::connection('mysql')
-        ->table('users')
-        ->where('email', $user->email)
-        ->first();
-
-    if ($localUserInCompanyDB) {
-        // 2. استخدم الـ ID الخاص به في قاعدة الشركات لجلب الدور المحقون
-        $roleId = \Illuminate\Support\Facades\DB::connection('mysql')
-            ->table('model_has_roles')
-            ->where('model_id', $localUserInCompanyDB->id) // هنا نستخدم الـ ID الصحيح (مثل 2 لجمال)
-            ->value('role_id');
-
-        if ($roleId) {
-            // 3. جلب اسم الدور وتخزينه في كائن المستخدم ليعرض في الصفحة
-            $user->current_role = \Illuminate\Support\Facades\DB::connection('mysql')
-                ->table('roles')
-                ->where('id', $roleId)
-                ->value('name');
-        }
-    }
-}
-
-    return view('roles.index', compact('users', 'roles'));
-}
-public function update(Request $request, $userId)
-{
-    $request->validate(['role' => 'required']);
-
-    // 1. جلب بيانات الموظف من HRMS
-    $hrUser = \App\Models\User::find($userId); 
-    if (!$hrUser) return redirect()->back()->with('error', 'الموظف غير موجود في نظام الموارد البشرية');
-
-    // 2. البحث عن الموظف في قاعدة الشركات (mysql)
-    $localUser = \Illuminate\Support\Facades\DB::connection('mysql')
-        ->table('users')
-        ->where('email', $hrUser->email)
-        ->first();
-
-    if (!$localUser) {
-        // إنشاء المستخدم تلقائياً إذا لم يكن موجوداً (حل مشكلة عدم الاستيراد)
-        $localUserId = \Illuminate\Support\Facades\DB::connection('mysql')
-            ->table('users')
-            ->insertGetId([
-                'name'       => $hrUser->name,
-                'email'      => $hrUser->email,
-                'password'   => $hrUser->password, 
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-    } else {
-        $localUserId = $localUser->id;
-    }
-
-    // جلب بيانات الدور من قاعدة الشركات
-    $role = \Spatie\Permission\Models\Role::on('mysql')->where('name', $request->role)->first();
-    if (!$role) return redirect()->back()->with('error', 'الدور المختار غير موجود في نظام الشركات');
-
-    // 3. تحديث الدور باستخدام الـ ID الصحيح
-    \Illuminate\Support\Facades\DB::connection('mysql')->transaction(function () use ($localUserId, $role) {
-        // حذف الأدوار القديمة
-        \Illuminate\Support\Facades\DB::connection('mysql')
-            ->table('model_has_roles')
-            ->where('model_id', $localUserId)
-            ->where('model_type', 'App\Models\User')
-            ->delete();
-
-        // إسناد الدور الجديد
-        \Illuminate\Support\Facades\DB::connection('mysql')
-            ->table('model_has_roles')
-            ->insert([
-                'role_id'    => $role->id,
-                'model_type' => 'App\Models\User',
-                'model_id'   => $localUserId,
-            ]);
-    });
-
-    // مسح الكاش ضروري لتحديث السايد بار فوراً
-    \Illuminate\Support\Facades\Artisan::call('permission:cache-reset');
-
-    return redirect()->back()->with('success', 'تم مزامنة بيانات الموظف ومنحه دور: ' . $request->role);
-}
-// ... الكود العلوي كما هو (index, update)
-
-public function store(Request $request)
-{
-    // هذه الدالة لاستيراد موظف من HRMS وإعطاؤه دور
-    $employee = DB::connection('mysql_hrms')
+        // تتبع الموظفين ومعرفة أدوارهم النشطة حالياً في نظام الشركات
+        foreach ($users as $user) {
+            // البحث عن الموظف في جدول مستخدمي الشركات باستخدام البريد الإلكتروني كحقل مشترك
+            $localUserInCompanyDB = DB::connection('mysql')
                 ->table('users')
-                ->where('email', $request->email)
+                ->where('email', $user->email)
                 ->first();
 
-    if (!$employee) {
-        return back()->with('error', 'الموظف غير موجود في نظام HRMS.');
-    }
+            // قيمة افتراضية في حال لم يملك دوراً بعد
+            $user->current_role = null;
 
-    $user = \App\Models\User::updateOrCreate(
-        ['email' => $employee->email],
-        [
-            'name'     => $employee->name,
-            'password' => $employee->password,
-        ]
-    );
+            if ($localUserInCompanyDB) {
+                // جلب الـ role_id المرتبط بالمستخدم من جدول علاقات Spatie
+                $roleId = DB::connection('mysql')
+                    ->table('model_has_roles')
+                    ->where('model_id', $localUserInCompanyDB->id) 
+                    ->where('model_type', 'App\Models\User') // تحديد الـ model_type للحزمة
+                    ->value('role_id');
 
-    $user->syncRoles($request->role);
-    \Illuminate\Support\Facades\Artisan::call('permission:cache-reset');
-
-    return back()->with('success', 'تم استيراد الموظف وتعيين الدور بنجاح!');
-}
-
-public function storeRole(Request $request)
-{
-    // هذه الدالة لإنشاء مسمى وظيفي جديد فقط (مثل super-admin)
-    $request->validate([
-        'name' => 'required|string|unique:roles,name',
-    ]);
-
-    // ننشئ الدور في قاعدة "الشركات" مباشرة
-    \Spatie\Permission\Models\Role::create([
-        'name' => $request->name,
-        'guard_name' => 'web'
-    ]);
-
-    \Illuminate\Support\Facades\Artisan::call('permission:cache-reset');
-
-    return back()->with('success', 'تم إضافة المسمى الوظيفي الجديد بنجاح!');
-}
-public function updatePermission(Request $request)
-{
-    try {
-        // 1. جلب الدور مع تحديد الاتصال
-        $role = \Spatie\Permission\Models\Role::on('mysql')->findOrFail($request->role_id);
-        
-        // 2. التصحيح هنا: استخدام firstOrCreate بدلاً من findOrCreate
-        // firstOrCreate تعمل بشكل ممتاز مع Builder (المسترجع بواسطة on('mysql'))
-        $permission = \Spatie\Permission\Models\Permission::on('mysql')->firstOrCreate([
-            'name' => $request->permission,
-            'guard_name' => 'web' // تأكد من مطابقة الـ guard المستخدم في مشروعك
-        ]);
-
-        // 3. تحديث الصلاحية
-        if ($request->status == 'true' || $request->status == true) {
-            $role->givePermissionTo($permission);
-        } else {
-            $role->revokePermissionTo($permission);
+                if ($roleId) {
+                    // جلب اسم المسمى الوظيفي للدور وتخزينه لعرضه بالجدول
+                    $user->current_role = DB::connection('mysql')
+                        ->table('roles')
+                        ->where('id', $roleId)
+                        ->value('name');
+                }
+            }
         }
 
-        return response()->json(['success' => true, 'message' => 'تم التحديث بنجاح']);
-    } catch (\Exception $e) {
-        return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        return view('roles.index', compact('users', 'roles'));
     }
-}
+
+    /**
+     * 2. دالة إسناد وتغيير الأدوار للموظفين القادمين من منظومة الـ HR
+     */
+    public function update(Request $request, $userId)
+    {
+        $request->validate([
+            'role' => 'required|string'
+        ]);
+
+        // جلب بيانات الموظف من منظومة الموظفين الحالية (الاتصال الأساسي) باستخدام الـ ID الممرر
+        $hrUser = \App\Models\User::findOrFail($userId);
+
+        // التحقق من وجود حساب مطابِق للموظف داخل قاعدة بيانات الشركات (اتصال mysql) باستخدام الإيميل
+        $localUser = DB::connection('mysql')
+            ->table('users')
+            ->where('email', $hrUser->email)
+            ->first();
+
+        // إذا كان الموظف لم يسبق له دخول نظام الشركات، ننشئ له سجلاً تلقائياً لمطابقته ومنحه الصلاحيات
+        if (!$localUser) {
+            $localUserId = DB::connection('mysql')
+                ->table('users')
+                ->insertGetId([
+                    'name'       => $hrUser->name,
+                    'email'      => $hrUser->email,
+                    'password'   => $hrUser->password ?? bcrypt('12345678'), // استخدام نفس كلمة المرور المشفرة أو افتراضية
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+        } else {
+            $localUserId = $localUser->id;
+        }
+
+        // التحقق من أن الدور المختار موجود وصالح في نظام الشركات
+        $role = \Spatie\Permission\Models\Role::on('mysql')->where('name', $request->role)->first();
+        
+        if (!$role) {
+            return redirect()->back()->with('error', 'الدور المختار غير معرف في نظام الشركات!');
+        }
+
+        // تحديث وإسناد الدور الجديد داخل جدول model_has_roles التابع للشركات
+        DB::connection('mysql')->transaction(function () use ($localUserId, $role) {
+            // تنظيف الأدوار السابقة الممنوحة للمستخدم لضمان تثبيت الدور الجديد فقط
+            DB::connection('mysql')
+                ->table('model_has_roles')
+                ->where('model_id', $localUserId)
+                ->where('model_type', 'App\Models\User')
+                ->delete();
+
+            // إدراج العلاقة الجديدة للدور
+            DB::connection('mysql')
+                ->table('model_has_roles')
+                ->insert([
+                    'role_id'    => $role->id,
+                    'model_type' => 'App\Models\User',
+                    'model_id'   => $localUserId,
+                ]);
+        });
+
+        // تصفير كاش حزمة الصلاحيات ليتم تطبيق الدور للموظف فوراً
+        Artisan::call('permission:cache-reset');
+
+        return redirect()->route('roles.index')->with('success', 'تم تعيين المسمى الوظيفي للموظف وتحديث بيانات الربط بنجاح!');
+    }
+
+    // =========================================================================
+    // الدوال المدمجة لإدارة الأدوار والصلاحيات نفسها (إضافة، تعديل، حذف الأدوار)
+    // =========================================================================
+
+    /**
+     * صفحة إضافة دور جديد
+     */
+    public function createRole()
+    {
+        $permissions = Permission::on('mysql')->get();
+        return view('roles.create', compact('permissions'));
+    }
+
+    /**
+     * حفظ الدور الجديد وصلاحياته في قاعدة البيانات
+     */
+    public function storeRole(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|unique:mysql.roles,name',
+            'permissions' => 'required|array'
+        ]);
+
+        // إنشاء سجل الدور على اتصال الشركات
+        $role = Role::on('mysql')->create([
+            'name' => $request->name,
+            'guard_name' => 'web'
+        ]);
+
+        // منح الصلاحيات المحددة
+        if ($request->has('permissions')) {
+            $role->givePermissionTo($request->permissions);
+        }
+
+        Artisan::call('permission:cache-reset');
+
+        return redirect()->route('roles.index')->with('success', 'تم إضافة المسمى الوظيفي الجديد بنجاح!');
+    }
+
+    /**
+     * 🛠️ تم التعديل هنا: صفحة تعديل الدور المنسقة والمجمعة تلقائياً
+     */
+    public function editRole($id)
+    {
+        // 1. جلب الدور من قاعدة بيانات الشركات
+        $role = Role::on('mysql')->findOrFail($id);
+        
+        // 2. جلب كافة الصلاحيات من اتصال الـ mysql وتجميعها بناءً على أول مقطع قبل النقطة لملف الـ Blade الجديد
+        $permissionsGrouped = Permission::on('mysql')->get()->groupBy(function($permission) {
+            return explode('.', $permission->name)[0]; 
+        });
+
+        // 3. جلب مصفوفة بأسماء الصلاحيات الحالية التي يمتلكها الدور لمطابقتها في مربعات الاختيار (Checkboxes)
+        $rolePermissions = $role->permissions->pluck('name')->toArray();
+
+        // 4. تمرير المتغير الجديد $permissionsGrouped لحل مشكلة الـ Undefined variable نهائياً
+        return view('roles.edit', compact('role', 'permissionsGrouped', 'rolePermissions'));
+    }
+
+    /**
+     * تحديث الدور والصلاحيات الممنوحة له
+     */
+    public function updateRole(Request $request, $id)
+    {
+        $role = Role::on('mysql')->findOrFail($id);
+
+        // حماية دور المدير العام من التعديل العشوائي
+        if ($role->name === 'admin' || $role->name === 'super-admin') {
+            return redirect()->route('roles.index')->with('error', 'لا يمكن تعديل صلاحيات المدير العام الأساسي!');
+        }
+
+        $request->validate([
+            'name' => 'required|string|unique:mysql.roles,name,' . $id,
+            'permissions' => 'required|array'
+        ]);
+
+        $role->update(['name' => $request->name]);
+        
+        // إعادة مزامنة الصلاحيات الجديدة المحددة بالكامل
+        $role->syncPermissions($request->permissions);
+
+        Artisan::call('permission:cache-reset');
+
+        return redirect()->route('roles.index')->with('success', 'تم تحديث بيانات الدور والصلاحيات بنجاح!');
+    }
+
+    /**
+     * حذف الدور بالكامل
+     */
+    public function destroyRole($id)
+    {
+        $role = Role::on('mysql')->findOrFail($id);
+
+        // منع حذف دور الأدمن العام مطلقاً
+        if ($role->name === 'admin' || $role->name === 'super-admin') {
+            return redirect()->route('roles.index')->with('error', 'محظور! لا يمكن حذف دور المدير العام.');
+        }
+
+        $role->delete();
+
+        Artisan::call('permission:cache-reset');
+
+        return redirect()->route('roles.index')->with('success', 'تم حذف الدور بنجاح.');
+    }
+
+    // ==========================================
+    // دوال إضافية احتياطية
+    // ==========================================
+    public function store(Request $request) { 
+        return $this->storeRole($request);
+    }
+    
+    public function updatePermission(Request $request) {
+        // إذا كنت تستخدم أجاكس لتعديل صلاحية معينة بشكل منفصل
+    }
 }

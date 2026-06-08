@@ -58,6 +58,27 @@ public function documents()
     {
         return $this->hasMany(Asset::class);
     }
+
+    /**
+ * جلب جميع بنود المصروفات المعرفة للشركة
+ */
+public function expenseCategories()
+{
+    return $this->hasMany(ExpenseCategory::class);
+}
+
+/**
+ * جلب جميع حركات المصروفات التشغيلية للشركة
+ */
+public function expenses()
+{
+    return $this->hasMany(CompanyExpense::class);
+}
+// علاقة الشركة بالإيرادات
+public function revenues()
+{
+    return $this->hasMany(Revenue::class, 'company_id');
+}
 }
 
 

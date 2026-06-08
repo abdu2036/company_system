@@ -9,7 +9,8 @@ use App\Models\CommercialRegister;
 use App\Models\Chamber;
 use App\Models\Importer;
 use Carbon\Carbon;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 class ReportController extends Controller
 {
     public function index()
@@ -54,4 +55,84 @@ class ReportController extends Controller
             'activeImporters'
         ));
     }
+
+public function financialReports()
+{
+    // 1. حساب إجمالي الإيرادات من جدول revenues الفعلي في قاعدة الشركات
+    $totalRevenues = DB::connection('mysql')->table('revenues')->sum('amount');
+
+    // 2. حساب إجمالي المصروفات التشغيلية من جدول company_expenses الحقيقي
+    $totalExpenses = DB::connection('mysql')->table('company_expenses')->sum('amount');
+
+    // 3. جلب مجموع الرواتب من قاعدة بيانات الـ HR الحقيقية hrms_db مباشرة
+    $totalSalaries = DB::table('hrms_db.salaries')->sum('basic_salary'); 
+
+    // 4. ✨ المعالجة الآمنة لحساب الضرائب (تمنع انهيار الصفحة في حال اختلاف اسم العمود)
+    $totalTaxes = 0;
+    // نتحقق أولاً إذا كان الحقل 'category' موجوداً فعلياً في الجدول لمنع الـ QueryException
+    if (Schema::connection('mysql')->hasColumn('company_expenses', 'category')) {
+        $totalTaxes = DB::connection('mysql')->table('company_expenses')->where('category', 'taxes')->sum('amount');
+    } elseif (Schema::connection('mysql')->hasColumn('company_expenses', 'expense_category_id')) {
+        // إذا كان النظام يربط التصنيف عبر ID، يمكنك اختيارياً جلب المجموع بناءً على الرقم أو تركه 0 مؤقتاً
+        $totalTaxes = DB::connection('mysql')->table('company_expenses')->where('expense_category_id', 1)->sum('amount');
+    }
+
+    // 5. معادلة صافي الربح الإجمالي الصحيحة
+    $netProfit = $totalRevenues - ($totalExpenses + $totalSalaries);
+
+    // 6. تمرير البيانات الحية إلى صفحة الـ Blade
+    return view('reports.financial', compact(
+        'totalRevenues', 
+        'totalExpenses', 
+        'totalSalaries', 
+        'totalTaxes', 
+        'netProfit'
+    ));
+}
+
+
+// =========================================================================
+// 📅 دالة توليد تقرير الأرباح والخسائر السنوي
+// =========================================================================
+public function annualReport(Request $request)
+{
+    // جلب السنة المطلوبة من الفلتر، أو اعتماد السنة الحالية كخيار افتراضي
+    $year = $request->get('year', Carbon::now()->year);
+
+    // 1. جلب إجمالي الإيرادات لهذه السنة فقط بناءً على حقل التاريخ (تأكد من اسم حقل التاريخ لديك، هنا فرضناه created_at)
+    $totalRevenues = DB::connection('mysql')->table('revenues')
+        ->whereYear('created_at', $year)
+        ->sum('amount');
+
+    // 2. جلب إجمالي المصروفات لهذه السنة فقط
+    $totalExpenses = DB::connection('mysql')->table('company_expenses')
+        ->whereYear('created_at', $year)
+        ->sum('amount');
+
+    // 3. حساب صافي الربح السنوي
+    $netProfit = $totalRevenues - $totalExpenses;
+
+    // 4. جلب تفصيل شهري (من شهر 1 إلى 12) لبناء جدول مالي منظم داخل التقرير
+    $monthlyData = [];
+    for ($m = 1; $m <= 12; $m++) {
+        $monthlyRevenues = DB::connection('mysql')->table('revenues')
+            ->whereYear('created_at', $year)
+            ->whereMonth('created_at', $m)
+            ->sum('amount');
+
+        $monthlyExpenses = DB::connection('mysql')->table('company_expenses')
+            ->whereYear('created_at', $year)
+            ->whereMonth('created_at', $m)
+            ->sum('amount');
+
+        $monthlyData[$m] = [
+            'revenues' => $monthlyRevenues,
+            'expenses' => $monthlyExpenses,
+            'profit'   => $monthlyRevenues - $monthlyExpenses
+        ];
+    }
+
+    // 5. تمرير البيانات الحية إلى صفحة الـ Blade المخصصة للتقرير السنوي
+    return view('reports.annual', compact('year', 'totalRevenues', 'totalExpenses', 'netProfit', 'monthlyData'));
+}
 }
