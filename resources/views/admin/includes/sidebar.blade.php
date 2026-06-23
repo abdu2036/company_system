@@ -155,6 +155,18 @@
                                     </a>
                                 </li>
                             @endcan
+                            @can('revenues.view')
+                            <li class="nav-item">
+                                <a href="{{ route('treasury.index') }}"
+                                    class="nav-link {{ request()->routeIs('treasury.*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-cash-register text-success"></i>
+                                    <p>
+                                        إدارة الخزينة والصناديق
+                                        <span class="badge badge-info right">جديد</span>
+                                    </p>
+                                </a>
+                            </li>
+                             @endcan
                             {{-- حماية زر التقارير المالية والإحصائية بناءً على الصلاحية النقطية --}}
                             @can('financial_reports.view')
                                 <li class="nav-item">
@@ -162,7 +174,7 @@
                                         class="nav-link {{ Route::is('reports.financial') ? 'active' : '' }}">
                                         <i class="nav-icon fas fa-chart-pie text-info"></i>
                                         <p class="font-arabic pr-2">
-                                            التقارير  والإحصائية
+                                            التقارير والإحصائية
                                         </p>
                                     </a>
                                 </li>
@@ -254,6 +266,7 @@
                         </a>
                     </li>
                 @endcan
+
             </ul>
         </nav>
     </div>

@@ -10,6 +10,7 @@ use App\Http\Controllers\{
 
 // Ensure RevenueController is explicitly imported to avoid undefined type errors
 use App\Http\Controllers\RevenueController;
+use App\Http\Controllers\TreasuryController;
 /*
 |--------------------------------------------------------------------------
 | المسارات العامة
@@ -376,5 +377,24 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('permission:roles.delete')->group(function () {
         Route::delete('/roles/{id}/destroy', [RoleAssignmentController::class, 'destroyRole'])->name('roles.destroy');
     });
+
+
+
+
+    
 });// نهاية مجموعة مسارات إدارة الأدوار المتقدمة
 //----------------------------- نهاية المسارات المحمية -------------------------------------------------------------------------------- 
+
+
+Route::middleware(['auth'])->group(function () {
+    // عرض صفحة كشف حساب الخزينة
+    Route::get('/treasury', [TreasuryController::class, 'index'])->name('treasury.index');
+    
+    // مسار الإيداع (استلام إيراد في الخزينة)
+    Route::post('/treasury/deposit', [TreasuryController::class, 'deposit'])->name('treasury.deposit');
+    
+    // مسار السحب (تسليم السيولة للمدير)
+    Route::post('/treasury/withdraw', [TreasuryController::class, 'withdraw'])->name('treasury.withdraw');
+    Route::get('/treasury/print-receipt/{id}', [TreasuryController::class, 'printReceipt'])->name('treasury.print_receipt');
+    
+});

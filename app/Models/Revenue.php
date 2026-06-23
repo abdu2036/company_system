@@ -17,6 +17,7 @@ class Revenue extends Model
         'company_id',
         'category_id',
         'amount',
+        
         'revenue_date',
         'transaction_code',
         'document_path',

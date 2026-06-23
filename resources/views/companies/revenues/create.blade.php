@@ -29,10 +29,11 @@
                         <thead class="bg-success text-white">
                             <tr>
                                 <th style="width: 5%">#</th>
-                                <th style="width: 25%">بند الإيراد <span class="text-warning">*</span></th>
-                                <th style="width: 15%">تاريخ القبض <span class="text-warning">*</span></th>
-                                <th style="width: 20%">المبلغ المالي (د.ل) <span class="text-warning">*</span></th>
-                                <th style="width: 30%">البيان / ملاحظات تفصيلية</th>
+                                <th style="width: 20%">بند الإيراد <span class="text-warning">*</span></th>
+                                <th style="width: 15%">طريقة القبض <span class="text-warning">*</span></th>
+                                <th style="width: 12%">تاريخ القبض <span class="text-warning">*</span></th>
+                                <th style="width: 15%">المبلغ المالي (د.ل) <span class="text-warning">*</span></th>
+                                <th style="width: 28%">البيان / ملاحظات تفصيلية</th>
                                 <th style="width: 5%">حذف</th>
                             </tr>
                         </thead>
@@ -45,6 +46,12 @@
                                         @foreach($categories as $cat)
                                             <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                                         @endforeach
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="payment_methods[0]" class="form-control text-right font-weight-bold" required>
+                                        <option value="cash" class="text-success">💵 نقدي (خزينة)</option>
+                                        <option value="bank" class="text-primary">🏦 تحويل مصرفي (البنك)</option>
                                     </select>
                                 </td>
                                 <td>
@@ -67,48 +74,44 @@
                 </div>
 
                 <hr>
-<div class="row mt-4 justify-content-start">
-    <div class="col-md-5">
-        <div class="info-box bg-light border shadow-sm">
-            <div class="info-box-content text-dark">
+                <div class="row mt-4 justify-content-start">
+                    <div class="col-md-5">
+                        <div class="info-box bg-light border shadow-sm">
+                            <div class="info-box-content text-dark">
+                                <label class="font-weight-bold text-secondary d-block">
+                                    <i class="fas fa-paperclip ml-1"></i>
+                                    إرفاق إيصال القبض الكلي أو السند المالي (اختياري):
+                                </label>
 
-                <label class="font-weight-bold text-secondary d-block">
-                    <i class="fas fa-paperclip ml-1"></i>
-                    إرفاق إيصال القبض الكلي أو السند المالي (اختياري):
-                </label>
+                                <label for="file_upload_input" class="btn btn-success font-weight-bold mb-2">
+                                    <i class="fas fa-folder-open ml-1"></i>
+                                    اختيار ملف
+                                </label>
 
-                <!-- زر اختيار الملف -->
-                <label for="file_upload_input" class="btn btn-success font-weight-bold mb-2">
-                    <i class="fas fa-folder-open ml-1"></i>
-                    اختيار ملف
-                </label>
+                                <input
+                                    type="text"
+                                    id="file_name_display"
+                                    class="form-control bg-white text-right"
+                                    placeholder="لم يتم اختيار ملف"
+                                    readonly
+                                >
 
-                <!-- اسم الملف -->
-                <input
-                    type="text"
-                    id="file_name_display"
-                    class="form-control bg-white text-right"
-                    placeholder="لم يتم اختيار ملف"
-                    readonly
-                >
+                                <input
+                                    type="file"
+                                    id="file_upload_input"
+                                    name="document"
+                                    class="d-none"
+                                    onchange="updateFileNameDisplay(this)"
+                                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                >
 
-                <!-- Input الملف الحقيقي -->
-                <input
-                    type="file"
-                    id="file_upload_input"
-                    name="document"
-                    class="d-none"
-                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                >
-
-                <small class="text-muted mt-2 d-block">
-                    عند الضغط على "اختيار ملف" سيفتح جهازك مباشرة لإرفاق السند أو الشيك المالي.
-                </small>
-
-            </div>
-        </div>
-    </div>
-</div>
+                                <small class="text-muted mt-2 d-block">
+                                    عند الضغط على "اختيار ملف" سيفتح جهازك مباشرة لإرفاق السند أو الشيك المالي.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="card-footer text-left">
@@ -139,6 +142,12 @@ document.getElementById('add-row-btn').addEventListener('click', function() {
                 @foreach($categories as $cat)
                     <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                 @endforeach
+            </select>
+        </td>
+        <td>
+            <select name="payment_methods[${rowCount}]" class="form-control text-right font-weight-bold" required>
+                <option value="cash" class="text-success">💵 نقدي (خزينة)</option>
+                <option value="bank" class="text-primary">🏦 تحويل مصرفي (البنك)</option>
             </select>
         </td>
         <td>
@@ -182,6 +191,9 @@ function recalculateRowNumbers() {
         const selectCat = row.querySelector('select[name^="categories["]');
         if (selectCat) selectCat.name = `categories[${index}]`;
 
+        const selectMethod = row.querySelector('select[name^="payment_methods["]');
+        if (selectMethod) selectMethod.name = `payment_methods[${index}]`;
+
         const inputAmount = row.querySelector('input[name^="amounts["]');
         if (inputAmount) inputAmount.name = `amounts[${index}]`;
 
@@ -194,7 +206,6 @@ function updateFileNameDisplay(input) {
     if (input.files && input.files.length > 0) {
         var filename = input.files[0].name;
         document.getElementById('file_name_display').value = filename;
-        document.getElementById('temp_file_path_input').value = filename;
     }
 }
 </script>
