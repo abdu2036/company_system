@@ -61,24 +61,22 @@ public function financialReports()
     // 1. حساب إجمالي الإيرادات من جدول revenues الفعلي في قاعدة الشركات
     $totalRevenues = DB::connection('mysql')->table('revenues')->sum('amount');
 
-    // 2. حساب إجمالي المصروفات التشغيلية من جدول company_expenses الحقيقي
+    // 2. حساب إجمالي المصروفات التشغيلية (والتي ستتضمن بند المرتبات المدخل يدويًا)
     $totalExpenses = DB::connection('mysql')->table('company_expenses')->sum('amount');
 
-    // 3. جلب مجموع الرواتب من قاعدة بيانات الـ HR الحقيقية hrms_db مباشرة
-    $totalSalaries = DB::table('hrms_db.salaries')->sum('basic_salary'); 
+    // 3. ❌ تم إلغاء جلب المرتبات تلقائياً من منظومة hrms_db بناءً على رغبتك
+    $totalSalaries = 0; 
 
-    // 4. ✨ المعالجة الآمنة لحساب الضرائب (تمنع انهيار الصفحة في حال اختلاف اسم العمود)
+    // 4. المعالجة الآمنة لحساب الضرائب من جدول المصروفات
     $totalTaxes = 0;
-    // نتحقق أولاً إذا كان الحقل 'category' موجوداً فعلياً في الجدول لمنع الـ QueryException
     if (Schema::connection('mysql')->hasColumn('company_expenses', 'category')) {
         $totalTaxes = DB::connection('mysql')->table('company_expenses')->where('category', 'taxes')->sum('amount');
     } elseif (Schema::connection('mysql')->hasColumn('company_expenses', 'expense_category_id')) {
-        // إذا كان النظام يربط التصنيف عبر ID، يمكنك اختيارياً جلب المجموع بناءً على الرقم أو تركه 0 مؤقتاً
         $totalTaxes = DB::connection('mysql')->table('company_expenses')->where('expense_category_id', 1)->sum('amount');
     }
 
-    // 5. معادلة صافي الربح الإجمالي الصحيحة
-    $netProfit = $totalRevenues - ($totalExpenses + $totalSalaries);
+    // 5. معادلة صافي الربح الإجمالي الاعتمادية الآن (الإيرادات - المصروفات الكلية)
+    $netProfit = $totalRevenues - $totalExpenses;
 
     // 6. تمرير البيانات الحية إلى صفحة الـ Blade
     return view('reports.financial', compact(
@@ -89,7 +87,6 @@ public function financialReports()
         'netProfit'
     ));
 }
-
 
 // =========================================================================
 // 📅 دالة توليد تقرير الأرباح والخسائر السنوي

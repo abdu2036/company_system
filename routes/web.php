@@ -368,7 +368,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/roles/{id}/update', [RoleAssignmentController::class, 'updateRole'])->name('roles.update');
         
         // تحديث الصلاحيات الفردية وتحديث بيانات ربط الموظفين
-        Route::post('/roles/update-employee/{userId}', [RoleAssignmentController::class, 'update'])->name('roles.update_employee');
+        Route::post('/roles/update-employee/{employeeId}', [RoleAssignmentController::class, 'update'])->name('roles.update_employee');
         Route::post('/roles/update-permission', [RoleAssignmentController::class, 'updatePermission'])->name('roles.update_permission');
     });
 

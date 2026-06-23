@@ -121,7 +121,7 @@
                 
                 <div class="card-body p-0" style="max-height: 520px; overflow-y: auto;">
                     <ul class="list-group list-group-flush pr-0">
-                        @forelse ($users as $user)
+                        @forelse ($employees as $user)
                             <li class="list-group-item d-flex justify-content-between align-items-center p-3 table-hover">
                                 <div class="text-right">
                                     <h6 class="mb-0 font-weight-bold text-dark">{{ $user->name }}</h6>

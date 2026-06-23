@@ -28,7 +28,7 @@
 @stop
 
 @section('content')
-<div class="container-fluid font-arabic text-right">
+<div class="container-fluid font-arabic text-left">
 
     {{-- قسم الإحصائيات المالية الشاملة (Small Boxes) --}}
     <h5 class="text-secondary font-weight-bold mb-3">

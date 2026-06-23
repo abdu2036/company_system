@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User; 
+use App\Models\Employee; // استدعاء موديل الموظف المربوط بقاعدة الـ HRMS
 use Spatie\Permission\Models\Role; 
 use Spatie\Permission\Models\Permission;
 use Illuminate\Http\Request;
@@ -17,34 +18,36 @@ class RoleAssignmentController extends Controller
      */
     public function index()
     {
-        // جلب الموظفين القادمين من قاعدة بيانات منظومة الموظفين (الاتصال الافتراضي للمشروع)
-        $users = \App\Models\User::all();
+        // جلب الموظفين القادمين من قاعدة بيانات منظومة الموظفين الذين لديهم بريد إلكتروني فقط
+        $employees = \App\Models\Employee::whereNotNull('email')
+            ->where('email', '!=', '')
+            ->get();
 
         // جلب الأدوار مع صلاحياتها المسجلة على قاعدة بيانات الشركات (اتصال mysql المعين لـ Spatie)
         $roles = \Spatie\Permission\Models\Role::on('mysql')->with('permissions')->get(); 
 
         // تتبع الموظفين ومعرفة أدوارهم النشطة حالياً في نظام الشركات
-        foreach ($users as $user) {
+        foreach ($employees as $employee) {
             // البحث عن الموظف في جدول مستخدمي الشركات باستخدام البريد الإلكتروني كحقل مشترك
             $localUserInCompanyDB = DB::connection('mysql')
                 ->table('users')
-                ->where('email', $user->email)
+                ->where('email', $employee->email)
                 ->first();
 
             // قيمة افتراضية في حال لم يملك دوراً بعد
-            $user->current_role = null;
+            $employee->current_role = null;
 
             if ($localUserInCompanyDB) {
                 // جلب الـ role_id المرتبط بالمستخدم من جدول علاقات Spatie
                 $roleId = DB::connection('mysql')
                     ->table('model_has_roles')
                     ->where('model_id', $localUserInCompanyDB->id) 
-                    ->where('model_type', 'App\Models\User') // تحديد الـ model_type للحزمة
+                    ->where('model_type', 'App\Models\User') 
                     ->value('role_id');
 
                 if ($roleId) {
                     // جلب اسم المسمى الوظيفي للدور وتخزينه لعرضه بالجدول
-                    $user->current_role = DB::connection('mysql')
+                    $employee->current_role = DB::connection('mysql')
                         ->table('roles')
                         ->where('id', $roleId)
                         ->value('name');
@@ -52,10 +55,13 @@ class RoleAssignmentController extends Controller
             }
         }
 
-        return view('roles.index', compact('users', 'roles'));
+        return view('roles.index', compact('employees', 'roles'));
     }
 
     /**
+     * 2. دالة إسناد وتغيير الأدوار للموظفين القادمين من منظومة الـ HR
+     */
+ /**
      * 2. دالة إسناد وتغيير الأدوار للموظفين القادمين من منظومة الـ HR
      */
     public function update(Request $request, $userId)
@@ -64,47 +70,79 @@ class RoleAssignmentController extends Controller
             'role' => 'required|string'
         ]);
 
-        // جلب بيانات الموظف من منظومة الموظفين الحالية (الاتصال الأساسي) باستخدام الـ ID الممرر
-        $hrUser = \App\Models\User::findOrFail($userId);
+        // 1. جلب بيانات الموظف من منظومة الموظفين الحالية (اتصال الـ HRMS تلقائياً عبر الموديل)
+        $hrUser = \App\Models\Employee::findOrFail($userId);
 
-        // التحقق من وجود حساب مطابِق للموظف داخل قاعدة بيانات الشركات (اتصال mysql) باستخدام الإيميل
-        $localUser = DB::connection('mysql')
+        // تنظيف البريد الإلكتروني وتحويله لحروف صغيرة ليتطابق مع الـ phpMyAdmin تماماً
+        $cleanEmail = strtolower(trim($hrUser->email));
+
+        // 2. 🛠️ جلب اسم الاتصال (Connection) الذي يعتمد عليه موديل الـ HR ديناميكياً لضمان البحث في الداتابيز الصحيحة
+        $hrConnection = $hrUser->getConnectionName() ?? config('database.default');
+
+        // 3. جلب حساب المستخدم من جدول users التابع للـ HR باستخدام الاتصال الصحيح
+        $hrUserAccount = DB::connection($hrConnection)
             ->table('users')
-            ->where('email', $hrUser->email)
+            ->where('email', $cleanEmail)
             ->first();
 
-        // إذا كان الموظف لم يسبق له دخول نظام الشركات، ننشئ له سجلاً تلقائياً لمطابقته ومنحه الصلاحيات
+        // 4. خطوة احتياطية صارمة: إذا لم يجده بالاستعلام المباشر، نبحث عنه عبر موديل المستخدم الافتراضي
+        if (!$hrUserAccount && class_exists('\App\Models\User')) {
+            $hrUserAccount = \App\Models\User::where('email', $cleanEmail)->first();
+        }
+
+        // 5. التحقق من وجود حساب مطابِق للموظف داخل قاعدة بيانات الشركات (اتصال mysql)
+        $localUser = DB::connection('mysql')
+            ->table('users')
+            ->where('email', $cleanEmail)
+            ->first();
+
+        // 6. التحقق النهائي والصارم من وجود الباسورد في الـ HR لمنع التمرير العشوائي
+        if (!$hrUserAccount) {
+            return redirect()->back()->with('error', 'خطأ: لم يتم العثور على حساب مستخدم للإيميل (' . $cleanEmail . ') داخل اتصال قاعدة الـ HR ('.$hrConnection.'). يرجى التأكد من تطابق الإيميل في جدول المستخدمين!');
+        }
+
+        // جلب كلمة المرور المشفرة الأصلية القادمة من الـ HR
+        $hrPassword = $hrUserAccount->password;
+
+        // 7. إذا كان الموظف لم يسبق له دخول نظام الشركات، ننشئ له سجلاً تلقائياً
         if (!$localUser) {
             $localUserId = DB::connection('mysql')
                 ->table('users')
                 ->insertGetId([
-                    'name'       => $hrUser->name,
-                    'email'      => $hrUser->email,
-                    'password'   => $hrUser->password ?? bcrypt('12345678'), // استخدام نفس كلمة المرور المشفرة أو افتراضية
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'name'        => $hrUser->full_name ?? $hrUser->name, 
+                    'email'       => $cleanEmail,
+                    'password'    => $hrPassword, // الباسورد الحقيقي المشفر
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
                 ]);
         } else {
             $localUserId = $localUser->id;
+
+            // 🛠️ تحديث كلمة المرور في قاعدة الشركات لتصبح مطابقة تماماً وبقوة لباسورد الـ HR الحالي
+            DB::connection('mysql')
+                ->table('users')
+                ->where('id', $localUserId)
+                ->update([
+                    'password'   => $hrPassword,
+                    'updated_at' => now()
+                ]);
         }
 
-        // التحقق من أن الدور المختار موجود وصالح في نظام الشركات
+        // 8. التحقق من أن الدور المختار موجود وصالح في نظام الشركات
         $role = \Spatie\Permission\Models\Role::on('mysql')->where('name', $request->role)->first();
         
         if (!$role) {
             return redirect()->back()->with('error', 'الدور المختار غير معرف في نظام الشركات!');
         }
 
-        // تحديث وإسناد الدور الجديد داخل جدول model_has_roles التابع للشركات
+        // 9. تحديث وإسناد الدور الجديد داخل جدول model_has_roles التابع للشركات
         DB::connection('mysql')->transaction(function () use ($localUserId, $role) {
-            // تنظيف الأدوار السابقة الممنوحة للمستخدم لضمان تثبيت الدور الجديد فقط
             DB::connection('mysql')
                 ->table('model_has_roles')
                 ->where('model_id', $localUserId)
                 ->where('model_type', 'App\Models\User')
                 ->delete();
 
-            // إدراج العلاقة الجديدة للدور
             DB::connection('mysql')
                 ->table('model_has_roles')
                 ->insert([
@@ -117,7 +155,7 @@ class RoleAssignmentController extends Controller
         // تصفير كاش حزمة الصلاحيات ليتم تطبيق الدور للموظف فوراً
         Artisan::call('permission:cache-reset');
 
-        return redirect()->route('roles.index')->with('success', 'تم تعيين المسمى الوظيفي للموظف وتحديث بيانات الربط بنجاح!');
+        return redirect()->route('roles.index')->with('success', 'تم تعيين المسمى الوظيفي بنجاح، وتم جلب ومزامنة كلمة المرور الأصلية من منظومة الـ HR!');
     }
 
     // =========================================================================
@@ -160,22 +198,18 @@ class RoleAssignmentController extends Controller
     }
 
     /**
-     * 🛠️ تم التعديل هنا: صفحة تعديل الدور المنسقة والمجمعة تلقائياً
+     * صفحة تعديل الدور المنسقة والمجمعة تلقائياً
      */
     public function editRole($id)
     {
-        // 1. جلب الدور من قاعدة بيانات الشركات
         $role = Role::on('mysql')->findOrFail($id);
         
-        // 2. جلب كافة الصلاحيات من اتصال الـ mysql وتجميعها بناءً على أول مقطع قبل النقطة لملف الـ Blade الجديد
         $permissionsGrouped = Permission::on('mysql')->get()->groupBy(function($permission) {
             return explode('.', $permission->name)[0]; 
         });
 
-        // 3. جلب مصفوفة بأسماء الصلاحيات الحالية التي يمتلكها الدور لمطابقتها في مربعات الاختيار (Checkboxes)
         $rolePermissions = $role->permissions->pluck('name')->toArray();
 
-        // 4. تمرير المتغير الجديد $permissionsGrouped لحل مشكلة الـ Undefined variable نهائياً
         return view('roles.edit', compact('role', 'permissionsGrouped', 'rolePermissions'));
     }
 
@@ -186,7 +220,6 @@ class RoleAssignmentController extends Controller
     {
         $role = Role::on('mysql')->findOrFail($id);
 
-        // حماية دور المدير العام من التعديل العشوائي
         if ($role->name === 'admin' || $role->name === 'super-admin') {
             return redirect()->route('roles.index')->with('error', 'لا يمكن تعديل صلاحيات المدير العام الأساسي!');
         }
@@ -197,8 +230,6 @@ class RoleAssignmentController extends Controller
         ]);
 
         $role->update(['name' => $request->name]);
-        
-        // إعادة مزامنة الصلاحيات الجديدة المحددة بالكامل
         $role->syncPermissions($request->permissions);
 
         Artisan::call('permission:cache-reset');
@@ -213,7 +244,6 @@ class RoleAssignmentController extends Controller
     {
         $role = Role::on('mysql')->findOrFail($id);
 
-        // منع حذف دور الأدمن العام مطلقاً
         if ($role->name === 'admin' || $role->name === 'super-admin') {
             return redirect()->route('roles.index')->with('error', 'محظور! لا يمكن حذف دور المدير العام.');
         }
@@ -226,7 +256,7 @@ class RoleAssignmentController extends Controller
     }
 
     // ==========================================
-    // دوال إضافية احتياطية
+    // دوال إضافية احتياطية (تم الاحتفاظ بها كاملة دون أي حذف)
     // ==========================================
     public function store(Request $request) { 
         return $this->storeRole($request);
